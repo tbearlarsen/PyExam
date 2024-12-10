@@ -52,7 +52,7 @@ import matplotlib.pyplot as plt
 # Parameters and simulation setup
 v_us_index = 1  # Assuming V1^US,local is the second variable in the covariance matrix
 time_horizon = 1  # One time step (week)
-num_simulations = 1000  # Number of simulations
+num_simulations = 10000  # Number of simulations
 mean_vector = np.array([0.07 * delta_t, 0.06 * delta_t] + [0] * (len(covariance_matrix) - 2))  # μ
 cov_matrix = covariance_matrix.to_numpy()  # Covariance matrix
 x0 = init_values["initial values"].to_numpy()  # Initial values
