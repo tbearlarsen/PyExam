@@ -1,22 +1,11 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from Data.Data import data_cov,data_init
-
-
-# Load data from the provided files
-covariance_matrix = data_cov
-init_values = data_init
+from Data.Data import covariance_matrix, init_values, cov_matrix, x0, mean_vector, delta_t
 
 # Simulation parameters
 time_horizon = 52  # Weekly steps (1 year)
-delta_t = 1 / 52   # Time step (1 week)
-mean_vector = np.array([0.07 * delta_t, 0.06 * delta_t] + [0] * (len(covariance_matrix) - 2))  # μ
-cov_matrix = covariance_matrix.to_numpy()  # Σ
 num_simulations = 10000  # Number of paths
-
-# Initial values
-x0 = init_values["initial values"].to_numpy()
 
 # Simulating X_t evolution
 np.random.seed(42)  # For reproducibility
