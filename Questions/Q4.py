@@ -7,13 +7,20 @@ import seaborn as sns
 
 # Simulate the joint distribution of P1
 np.random.seed(42)
-simulated_shocks = np.random.multivariate_normal(mean_vector, cov_matrix, size=10000)
+num_simulations = 10000
+simulated_shocks = np.random.multivariate_normal(mean_vector, cov_matrix, num_simulations)
 X_1 = x0 + simulated_shocks
 
+#Indexing
+FX_t_index=0
+V_US_t_index=1
+V_EUR_t_index=2
+
+
 # Calculate components of P1
-FX_1 = np.exp(X_1[:, 0])  # Exchange rate
-V1_US_local = np.exp(X_1[:, 1])  # US equities
-V1_EUR = np.exp(X_1[:, 2])  # EUR equities
+FX_1 = np.exp(X_1[:, FX_t_index])  # Exchange rate
+V1_US_local = np.exp(X_1[:, V_US_t_index])  # US equities
+V1_EUR = np.exp(X_1[:, V_EUR_t_index])  # EUR equities
 
 # Zero-coupon bond prices at t = 1
 y1_US_4Y = X_1[:, 9]  # Assuming the 4-year USD yield is at index 9
