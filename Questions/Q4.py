@@ -16,17 +16,24 @@ FX_t_index=0
 V_US_t_index=1
 V_EUR_t_index=2
 
-
 # Calculate components of P1
 FX_1 = np.exp(X_1[:, FX_t_index])  # Exchange rate
 V1_US_local = np.exp(X_1[:, V_US_t_index])  # US equities
 V1_EUR = np.exp(X_1[:, V_EUR_t_index])  # EUR equities
 
+#Interpolate 4-year yields
+#Existing yields
+y1_US_3=X_1[:,11]
+y1_US_5=X_1[:,12]
+y1_EUR_3=X_1[:,5]
+y1_EUR_5=X_1[:,6]
+y1_US_4 = y1_US_3 + (4 - 3) / (5 - 3) * (y1_US_5 - y1_US_3)
+y1_EUR_4 = y1_EUR_3 + (4 - 3) / (5 - 3) * (y1_EUR_5 - y1_EUR_3)
+
+
 # Zero-coupon bond prices at t = 1
-y1_US_4Y = X_1[:, 9]  # Assuming the 4-year USD yield is at index 9
-y1_EUR_4Y = X_1[:, 7]  # Assuming the 4-year EUR yield is at index 7
-Z1_US_4Y = np.exp(-y1_US_4Y * 4)
-Z1_EUR_4Y = np.exp(-y1_EUR_4Y * 4)
+Z1_US_4Y = np.exp(-y1_US_4 * 4)
+Z1_EUR_4Y = np.exp(-y1_EUR_4 * 4)
 
 # Combine into the joint vector P1
 P1 = np.column_stack((FX_1, V1_US_local, V1_EUR, Z1_US_4Y, Z1_EUR_4Y))
