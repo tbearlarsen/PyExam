@@ -20,23 +20,23 @@ Z0_EUR_5Y=np.exp(x0[6])
 
 #Calculate instruments of PnL_1:
 #1:
-PnL_FX = 1 / F0_1 - 1 / FX_1
+in1 = 1 / F0_1 - 1 / FX_1
 
 #2:
-PnL_V1_US=V1_US-V0_US
+in2 = V1_US-V0_US
 
 #3:
-PnL_V1_EUR = V1_EUR - V0_EUR
+in3 = V1_EUR - V0_EUR
 
 #4:
-PnL_Z1_US = Z1_US_4Y - Z0_US_5Y
+in4 = Z1_US_4Y - Z0_US_5Y
 
 #5:
-PnL_Z1_EUR = Z1_EUR_4Y - Z0_EUR_5Y
+in5 = Z1_EUR_4Y - Z0_EUR_5Y
 
 
 #Combine into PnL vector:
-PnL_1 = np.column_stack((PnL_FX, PnL_V1_US, PnL_V1_EUR, PnL_Z1_US, PnL_Z1_EUR))
+PnL_1 = np.column_stack((in1, in2, in3, in4, in5))
 
 print(PnL_1)
 
