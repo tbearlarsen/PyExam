@@ -22,7 +22,6 @@ for t in range(1, time_horizon + 1):
 log_fx_simulations = simulations[:, 0, :]  # log(FX_t) is the first variable
 
 
-
 # Define the time points (from 0 to 52 weeks)
 time_points = range(time_horizon + 1)
 
