@@ -5,7 +5,106 @@ from Data.Data import covariance_matrix, init_values, cov_matrix, x0, mean_vecto
 from scipy.stats import norm, lognorm
 import seaborn as sns
 
-#Calcualting the covariances for the 4Y yields and adding to the covariance matrix:
+# Given parameters
+X0 = x0
+mu = mean_vector
+Sigma = cov_matrix
+time_steps = 52  # Number of weekly time steps
+
+# Calculate mean and covariance matrix of X1
+mean_X1 = X0 + time_steps * mu
+cov_X1 = time_steps * Sigma
+
+# Define indices for P1 components in X1
+log_FX_index = 0
+log_V_US_index = 1
+log_V_EUR_index = 2
+y_US_3_index = 11
+y_US_5_index = 12
+y_EUR_3_index = 5
+y_EUR_5_index = 6
+
+# Analytical transformations for P1 components
+# Mean and variance of lognormal variables are derived from the normal distribution of X1
+mean_log_FX = mean_X1[log_FX_index]
+var_log_FX = cov_X1[log_FX_index, log_FX_index]
+
+mean_log_V_US = mean_X1[log_V_US_index]
+var_log_V_US = cov_X1[log_V_US_index, log_V_US_index]
+
+mean_log_V_EUR = mean_X1[log_V_EUR_index]
+var_log_V_EUR = cov_X1[log_V_EUR_index, log_V_EUR_index]
+
+# Interpolation for yields to calculate bond prices
+mean_y_US_4 = mean_X1[y_US_3_index] + (4 - 3) / (5 - 3) * (mean_X1[y_US_5_index] - mean_X1[y_US_3_index])
+var_y_US_4 = (
+    (4 - 3) / (5 - 3) ** 2 * cov_X1[y_US_5_index, y_US_5_index]
+    + cov_X1[y_US_3_index, y_US_3_index]
+    - 2 * (4 - 3) / (5 - 3) * cov_X1[y_US_3_index, y_US_5_index]
+)
+
+mean_y_EUR_4 = mean_X1[y_EUR_3_index] + (4 - 3) / (5 - 3) * (mean_X1[y_EUR_5_index] - mean_X1[y_EUR_3_index])
+var_y_EUR_4 = (
+    (4 - 3) / (5 - 3) ** 2 * cov_X1[y_EUR_5_index, y_EUR_5_index]
+    + cov_X1[y_EUR_3_index, y_EUR_3_index]
+    - 2 * (4 - 3) / (5 - 3) * cov_X1[y_EUR_3_index, y_EUR_5_index]
+)
+
+# Mean and variance for lognormal bond prices
+mean_Z_US_4Y = -mean_y_US_4 * 4
+var_Z_US_4Y = (4 ** 2) * var_y_US_4
+
+mean_Z_EUR_4Y = -mean_y_EUR_4 * 4
+var_Z_EUR_4Y = (4 ** 2) * var_y_EUR_4
+
+# Jacobian matrix for transformations
+J = np.zeros((5, len(X0)))
+
+# Fill Jacobian entries for each transformation
+# FX_1 = exp(log FX)
+J[0, log_FX_index] = np.exp(mean_log_FX)
+
+# V1_US = exp(log V_US)
+J[1, log_V_US_index] = np.exp(mean_log_V_US)
+
+# V1_EUR = exp(log V_EUR)
+J[2, log_V_EUR_index] = np.exp(mean_log_V_EUR)
+
+# Z1_US_4Y = exp(-y_US_4 * 4)
+J[3, y_US_3_index] = -4 * (1 - (4 - 3) / (5 - 3)) * np.exp(mean_Z_US_4Y)
+J[3, y_US_5_index] = -4 * (4 - 3) / (5 - 3) * np.exp(mean_Z_US_4Y)
+
+# Z1_EUR_4Y = exp(-y_EUR_4 * 4)
+J[4, y_EUR_3_index] = -4 * (1 - (4 - 3) / (5 - 3)) * np.exp(mean_Z_EUR_4Y)
+J[4, y_EUR_5_index] = -4 * (4 - 3) / (5 - 3) * np.exp(mean_Z_EUR_4Y)
+
+# Covariance matrix of P1
+cov_P1 = J @ cov_X1 @ J.T
+
+# Output mean vector and covariance matrix of P1
+mean_P1 = np.array([
+    np.exp(mean_log_FX),
+    np.exp(mean_log_V_US),
+    np.exp(mean_log_V_EUR),
+    np.exp(mean_Z_US_4Y),
+    np.exp(mean_Z_EUR_4Y),
+])
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+"""#Calcualting the covariances for the 4Y yields and adding to the covariance matrix:
 cov_matrix_df=pd.read_excel(r"/Users/osito/Library/CloudStorage/OneDrive-CBS-CopenhagenBusinessSchool/Masters/3. Semester/Library/PyExam/Data/covariance_matrix.xlsx")
 
 #Covariance matrix processing:
@@ -136,100 +235,5 @@ P1 = np.column_stack((FX_1, V1_US_local, V1_EUR, Z1_US_4Y, Z1_EUR_4Y))
 # Visualise pairwise relationships
 df = pd.DataFrame(P1, columns=["FX_1", "V1_US_local", "V1_EUR", "Z1_US_4Y", "Z1_EUR_4Y"])
 sns.pairplot(df)
-plt.show()
-
-
-
-
-
-
-# Given parameters
-X0 = x0
-mu = mean_vector
-Sigma = cov_matrix
-time_steps = 52  # Number of weekly time steps
-
-# Calculate mean and covariance matrix of X1
-mean_X1 = X0 + time_steps * mu
-cov_X1 = time_steps * Sigma
-
-# Define indices for P1 components in X1
-log_FX_index = 0
-log_V_US_index = 1
-log_V_EUR_index = 2
-y_US_3_index = 11
-y_US_5_index = 12
-y_EUR_3_index = 5
-y_EUR_5_index = 6
-
-# Analytical transformations for P1 components
-# Mean and variance of lognormal variables are derived from the normal distribution of X1
-mean_log_FX = mean_X1[log_FX_index]
-var_log_FX = cov_X1[log_FX_index, log_FX_index]
-
-mean_log_V_US = mean_X1[log_V_US_index]
-var_log_V_US = cov_X1[log_V_US_index, log_V_US_index]
-
-mean_log_V_EUR = mean_X1[log_V_EUR_index]
-var_log_V_EUR = cov_X1[log_V_EUR_index, log_V_EUR_index]
-
-# Interpolation for yields to calculate bond prices
-mean_y_US_4 = mean_X1[y_US_3_index] + (4 - 3) / (5 - 3) * (mean_X1[y_US_5_index] - mean_X1[y_US_3_index])
-var_y_US_4 = (
-    (4 - 3) / (5 - 3) ** 2 * cov_X1[y_US_5_index, y_US_5_index]
-    + cov_X1[y_US_3_index, y_US_3_index]
-    - 2 * (4 - 3) / (5 - 3) * cov_X1[y_US_3_index, y_US_5_index]
-)
-
-mean_y_EUR_4 = mean_X1[y_EUR_3_index] + (4 - 3) / (5 - 3) * (mean_X1[y_EUR_5_index] - mean_X1[y_EUR_3_index])
-var_y_EUR_4 = (
-    (4 - 3) / (5 - 3) ** 2 * cov_X1[y_EUR_5_index, y_EUR_5_index]
-    + cov_X1[y_EUR_3_index, y_EUR_3_index]
-    - 2 * (4 - 3) / (5 - 3) * cov_X1[y_EUR_3_index, y_EUR_5_index]
-)
-
-# Mean and variance for lognormal bond prices
-mean_Z_US_4Y = -mean_y_US_4 * 4
-var_Z_US_4Y = (4 ** 2) * var_y_US_4
-
-mean_Z_EUR_4Y = -mean_y_EUR_4 * 4
-var_Z_EUR_4Y = (4 ** 2) * var_y_EUR_4
-
-# Jacobian matrix for transformations
-J = np.zeros((5, len(X0)))
-
-# Fill Jacobian entries for each transformation
-# FX_1 = exp(log FX)
-J[0, log_FX_index] = np.exp(mean_log_FX)
-
-# V1_US = exp(log V_US)
-J[1, log_V_US_index] = np.exp(mean_log_V_US)
-
-# V1_EUR = exp(log V_EUR)
-J[2, log_V_EUR_index] = np.exp(mean_log_V_EUR)
-
-# Z1_US_4Y = exp(-y_US_4 * 4)
-J[3, y_US_3_index] = -4 * (1 - (4 - 3) / (5 - 3)) * np.exp(mean_Z_US_4Y)
-J[3, y_US_5_index] = -4 * (4 - 3) / (5 - 3) * np.exp(mean_Z_US_4Y)
-
-# Z1_EUR_4Y = exp(-y_EUR_4 * 4)
-J[4, y_EUR_3_index] = -4 * (1 - (4 - 3) / (5 - 3)) * np.exp(mean_Z_EUR_4Y)
-J[4, y_EUR_5_index] = -4 * (4 - 3) / (5 - 3) * np.exp(mean_Z_EUR_4Y)
-
-# Covariance matrix of P1
-cov_P1 = J @ cov_X1 @ J.T
-
-# Output mean vector and covariance matrix of P1
-mean_P1 = np.array([
-    np.exp(mean_log_FX),
-    np.exp(mean_log_V_US),
-    np.exp(mean_log_V_EUR),
-    np.exp(mean_Z_US_4Y),
-    np.exp(mean_Z_EUR_4Y),
-])
-
-print("Mean of P1:", mean_P1)
-print("Covariance matrix of P1:", cov_P1)
-
-
+plt.show()"""
 

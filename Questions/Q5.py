@@ -7,7 +7,32 @@ import seaborn as sns
 from Questions.Q4 import FX_1, V1_US_local, Z1_US_4Y, V1_EUR, Z1_EUR_4Y
 
 
-# Transform to EUR
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+"""# Transform to EUR
 FX_1_inverse = 1 / FX_1
 V1_US = V1_US_local * FX_1_inverse
 Z1_US_4Y_EUR = Z1_US_4Y * FX_1_inverse
@@ -39,7 +64,7 @@ plt.xlabel("V1_US (EUR)")
 plt.ylabel("Density")
 plt.legend()
 plt.grid(True)
-plt.show()
+plt.show()"""
 
 
 
