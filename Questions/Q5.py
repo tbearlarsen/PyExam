@@ -3,9 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from Data.Data import covariance_matrix, init_values, cov_matrix, x0, mean_vector, delta_t
 from scipy.stats import norm, lognorm
-from Questions.Q4 import mean_log_FX, var_log_FX, mean_log_V_US, var_log_V_US, mean_Z_US_4Y, var_Z_US_4Y
-
-
+from Questions.Q4 import mean_log_FX, var_log_FX, mean_log_V_US, var_log_V_US, mean_Z_US_4Y, var_Z_US_4Y, mean_log_V_EUR, mean_Z_EUR_4Y
 
 # Mean and variance for P1^{EUR}
 # Reciprocal FX
@@ -20,9 +18,21 @@ var_V1_US_EUR = (np.exp(var_log_V_US) - 1) * np.exp(2 * mean_log_V_US + var_log_
 mean_Z1_US_4Y_EUR = np.exp(mean_Z_US_4Y) * mean_1_FX
 var_Z1_US_4Y_EUR = (np.exp(var_Z_US_4Y) - 1) * np.exp(2 * mean_Z_US_4Y + var_Z_US_4Y) + var_1_FX * mean_Z1_US_4Y_EUR**2
 
+# Output mean vector and covariance matrix of P1
+mean_P1_EUR = np.array([
+    np.exp(mean_1_FX),
+    np.exp(mean_V1_US_EUR),
+    np.exp(mean_log_V_EUR),
+    np.exp(mean_Z1_US_4Y_EUR),
+    np.exp(mean_Z_EUR_4Y),
+])
+
+
+
 # Analytical approximations for lognormal PDF
 sigma_V1_US_EUR = np.sqrt(var_V1_US_EUR)
 mu_V1_US_EUR = np.log(mean_V1_US_EUR) - 0.5 * sigma_V1_US_EUR**2
+
 
 
 # Plot comparison between simulation and analytical PDF
