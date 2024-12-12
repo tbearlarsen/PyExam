@@ -9,7 +9,7 @@ x0 = init_values["initial values"].to_numpy()
 
 #General parameters
 delta_t = 1 / 52
-mean_vector = np.array([0.07 * delta_t, 0.06 * delta_t] + [0] * (len(covariance_matrix) - 2))
+mean_vector = np.array([0,0.07 * delta_t, 0.06 * delta_t] + [0] * (len(covariance_matrix) - 3))
 
 
 
