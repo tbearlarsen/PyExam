@@ -100,10 +100,6 @@ mean_P1 = np.array([
 
 
 
-
-
-
-
 """#Calcualting the covariances for the 4Y yields and adding to the covariance matrix:
 cov_matrix_df=pd.read_excel(r"/Users/osito/Library/CloudStorage/OneDrive-CBS-CopenhagenBusinessSchool/Masters/3. Semester/Library/PyExam/Data/covariance_matrix.xlsx")
 
