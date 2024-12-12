@@ -33,3 +33,8 @@ E_PnL_Z1_EUR = mean_P1_EUR[4] - Z0_US_5Y
 
 # Combine into the PnL vector
 PnL_mean_vector = np.array([E_PnL_FX, E_PnL_V1_US, E_PnL_V1_EUR, E_PnL_Z1_US, E_PnL_Z1_EUR])
+
+
+
+
+
