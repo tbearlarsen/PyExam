@@ -1,6 +1,5 @@
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
 from Data.Data import covariance_matrix, init_values, cov_matrix, x0, mean_vector, delta_t
 from scipy.stats import norm, lognorm
 import seaborn as sns
