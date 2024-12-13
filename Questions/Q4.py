@@ -5,8 +5,6 @@ from Data.Data import covariance_matrix, init_values, cov_matrix, x0, mean_vecto
 from scipy.stats import norm, lognorm
 import seaborn as sns
 
-from JJ_code import eigenvalues, is_positive_semi_definite
-
 #Given parameters:
 mu = mean_vector
 Sigma = cov_matrix
@@ -166,6 +164,11 @@ is_positive_semi_definite, eigenvalues
 #The final distribution of the P1 vector:
 mean_P1, cov_P1
 
+
+"""#Export to Excel:
+mean_P1_excel=pd.DataFrame(mean_P1, index=variables, columns=["Mean"])
+mean_P1_excel.to_excel("mean_P1.xlsx")
+cov_P1.to_excel("cov_P1.xlsx")"""
 
 
 

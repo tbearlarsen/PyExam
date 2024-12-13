@@ -3,56 +3,54 @@ import numpy as np
 import matplotlib.pyplot as plt
 from Data.Data import covariance_matrix, init_values, cov_matrix, x0, mean_vector, delta_t
 from scipy.stats import norm, lognorm
-from Questions.Q4 import mean_log_FX, var_log_FX, mean_log_V_US, var_log_V_US, mean_Z_US_4Y, var_Z_US_4Y, mean_log_V_EUR, mean_Z_EUR_4Y
+from Questions.Q4 import mean_P1, cov_P1
 
-# Mean and variance for P1^{EUR}
-# Reciprocal FX
-mean_1_FX = np.exp(-mean_log_FX + var_log_FX)
-var_1_FX = (np.exp(var_log_FX) - 1) * np.exp(-2 * mean_log_FX + var_log_FX)
+#Converting the covariance matrix to EUR:
+def convert_covariance_to_EUR(mean, covariance):
+    FX_1=mean[0]
+    v1_us_local=mean[1]
+    z4_us=mean[3]
 
-# V1_US in EUR
-mean_V1_US_EUR = np.exp(mean_log_V_US) * mean_1_FX
-var_V1_US_EUR = (np.exp(var_log_V_US) - 1) * np.exp(2 * mean_log_V_US + var_log_V_US) + var_1_FX * mean_V1_US_EUR**2
+    n=len(mean)
+    J=np.eye(n)
 
-# Z1_US_4Y in EUR
-mean_Z1_US_4Y_EUR = np.exp(mean_Z_US_4Y) * mean_1_FX
-var_Z1_US_4Y_EUR = (np.exp(var_Z_US_4Y) - 1) * np.exp(2 * mean_Z_US_4Y + var_Z_US_4Y) + var_1_FX * mean_Z1_US_4Y_EUR**2
+    J[0,0]=-1/(FX_1**2)
 
-# Output mean vector and covariance matrix of P1
-mean_P1_EUR = np.array([
-    np.exp(mean_1_FX),
-    np.exp(mean_V1_US_EUR),
-    np.exp(mean_log_V_EUR),
-    np.exp(mean_Z1_US_4Y_EUR),
-    np.exp(mean_Z_EUR_4Y),
-])
+    J[1,0]=-v1_us_local/(FX_1**2)
+    J[1,1]=1/FX_1
 
+    J[3,0]=-z4_us/(FX_1**2)
+    J[3,3]=1/FX_1
 
+    cov_P1_eur= J @ covariance @ J.T
 
-# Analytical approximations for lognormal PDF
-sigma_V1_US_EUR = np.sqrt(var_V1_US_EUR)
-mu_V1_US_EUR = np.log(mean_V1_US_EUR) - 0.5 * sigma_V1_US_EUR**2
+    return cov_P1_eur
 
+cov_P1_eur=convert_covariance_to_EUR(mean_P1, cov_P1)
+
+#Verifying the covariance matrix is positive semi-definite:
+eigenvalues=np.linalg.eigvals(cov_P1_eur.values)
+is_positive_semi_definite=np.all(eigenvalues>=0)
+is_positive_semi_definite, eigenvalues
 
 
-# Plot comparison between simulation and analytical PDF
-# Simulated data (placeholder for demonstration)
-V1_US_EUR_simulated = np.random.lognormal(mean=mu_V1_US_EUR, sigma=sigma_V1_US_EUR, size=10000)
+#Converting the mean vector to EUR:
+    # Extract individual means from the P1 vector
+fx_mean = mean_P1[0]  # FX mean
+v_us_mean = mean_P1[1]  # USD stock mean
+v_eur_mean = mean_P1[2]  # EUR stock mean (unchanged)
+z_usd_4y_mean = mean_P1[3]  # USD bond mean
+z_eur_4y_mean = mean_P1[4]  # EUR bond mean (unchanged)
 
-plt.figure(figsize=(10, 6))
+    # Convert each component
+mu_1 = 1 / fx_mean  # 1 / FX_1
+mu_2 = v_us_mean / fx_mean  # V_US_LOCAL / FX_1
+mu_3 = v_eur_mean  # V_EUR (unchanged)
+mu_4 = z_usd_4y_mean / fx_mean  # Z_4Y_USD / FX_1
+mu_5 = z_eur_4y_mean  # Z_4Y_EUR (unchanged)
 
-# Simulated histogram
-plt.hist(V1_US_EUR_simulated, bins=50, density=True, alpha=0.5, label='Simulated V1_US (EUR)')
+mean_P1_eur=np.array([mu_1, mu_2, mu_3, mu_4, mu_5])
 
-# Analytical PDF
-x = np.linspace(min(V1_US_EUR_simulated), max(V1_US_EUR_simulated), 500)
-pdf = lognorm.pdf(x, s=sigma_V1_US_EUR, scale=np.exp(mu_V1_US_EUR))
-plt.plot(x, pdf, label='Analytical PDF', color='red')
 
-# Labels and legend
-plt.title('Comparison of Simulated and Analytical Distributions for V1_US (EUR)')
-plt.xlabel('V1_US (EUR)')
-plt.ylabel('Density')
-plt.legend()
-plt.grid(True)
-plt.show()
+#The distribution of the P1 EUR:
+mean_P1_eur, cov_P1_eur
