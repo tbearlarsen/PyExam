@@ -5,17 +5,16 @@ from Data.Data import covariance_matrix, init_values, cov_matrix, x0, mean_vecto
 from scipy.stats import norm, lognorm
 import seaborn as sns
 
-# Given parameters
-X0 = x0
+#Given parameters:
 mu = mean_vector
 Sigma = cov_matrix
-time_steps = 52  # Number of weekly time steps
+time_steps = 52
 
-# Calculate mean and covariance matrix of X1
-mean_X1 = X0 + time_steps * mu
+#Calculate mean and covariance matrix of X1:
+mean_X1 = x0 + time_steps * mu
 cov_X1 = time_steps * Sigma
 
-# Define indices for P1 components in X1
+#Define indices for P1 components in X1:
 log_FX_index = 0
 log_V_US_index = 1
 log_V_EUR_index = 2
@@ -24,31 +23,116 @@ y_US_5_index = 12
 y_EUR_3_index = 5
 y_EUR_5_index = 6
 
-# Analytical transformations for P1 components
-# Mean and variance of lognormal variables are derived from the normal distribution of X1
-mean_log_FX = mean_X1[log_FX_index]
-var_log_FX = cov_X1[log_FX_index, log_FX_index]
+##Analytical transformations for P1 components##
+#The EUR/USD FX rate:
+    #The log FX rate:
+mean_log_FX1 = mean_X1[log_FX_index]
+var_log_FX1 = cov_X1[log_FX_index, log_FX_index] #The log variance of the EUR/USD FX rate at time 1 = 0.005864534599574461
 
-mean_log_V_US = mean_X1[log_V_US_index]
-var_log_V_US = cov_X1[log_V_US_index, log_V_US_index]
+    #The lognormal FX rate:
+mean_FX1=np.exp(mean_log_FX1+(var_log_FX1/2)) #The mean of the EUR/USD FX rate at time 1 = 1.0599535146393084
+var_FX1=(np.exp(var_log_FX1)-1)*np.exp(2*mean_log_FX1+var_log_FX1) #The variance of the EUR/USD FX rate at time 1 = 0.006608171129626716
 
-mean_log_V_EUR = mean_X1[log_V_EUR_index]
-var_log_V_EUR = cov_X1[log_V_EUR_index, log_V_EUR_index]
 
-# Interpolation for yields to calculate bond prices
-mean_y_US_4 = mean_X1[y_US_3_index] + (4 - 3) / (5 - 3) * (mean_X1[y_US_5_index] - mean_X1[y_US_3_index])
-var_y_US_4 = (
-    (4 - 3) / (5 - 3) ** 2 * cov_X1[y_US_5_index, y_US_5_index]
-    + cov_X1[y_US_3_index, y_US_3_index]
-    - 2 * (4 - 3) / (5 - 3) * cov_X1[y_US_3_index, y_US_5_index]
-)
+#The value of the US equity (local):
+    #log mean and variance:
+mean_log_V1_us_local = mean_X1[log_V_US_index]
+var_log_V1_us_local = cov_X1[log_V_US_index, log_V_US_index]
 
-mean_y_EUR_4 = mean_X1[y_EUR_3_index] + (4 - 3) / (5 - 3) * (mean_X1[y_EUR_5_index] - mean_X1[y_EUR_3_index])
-var_y_EUR_4 = (
-    (4 - 3) / (5 - 3) ** 2 * cov_X1[y_EUR_5_index, y_EUR_5_index]
-    + cov_X1[y_EUR_3_index, y_EUR_3_index]
-    - 2 * (4 - 3) / (5 - 3) * cov_X1[y_EUR_3_index, y_EUR_5_index]
-)
+    #lognormal mean and variance:
+mean_V1_us_local=np.exp(mean_log_V1_us_local+(var_log_V1_us_local/2))
+var_V1_us_local=(np.exp(var_log_V1_us_local)-1)*np.exp(2*mean_log_V1_us_local+var_log_V1_us_local)
+
+
+#The value of the EU equity:
+    #log mean and variance:
+mean_log_V1_eur = mean_X1[log_V_EUR_index]
+var_log_V1_eur = cov_X1[log_V_EUR_index, log_V_EUR_index]
+
+    #lognormal mean and variance:
+mean_v1_eur=np.exp(mean_log_V1_eur+(var_log_V1_eur/2))
+var_v1_eur=(np.exp(var_log_V1_eur)-1)*np.exp(2*mean_log_V1_eur+var_log_V1_eur)
+#print(mean_v1_eur,var_v1_eur)
+
+
+#Yield and price for 4-year bond:
+#US bond yield:
+    #mean:
+mean_y1_us_4 = mean_X1[y_US_3_index] + (4 - 3) / (5 - 3) * (mean_X1[y_US_5_index] - mean_X1[y_US_3_index])
+
+    #variance:
+var_y1_us_3=cov_X1[y_US_3_index, y_US_3_index]
+var_y1_us_5=cov_X1[y_US_5_index, y_US_5_index]
+var_y1_us_4=var_y1_us_3+(4-3)/(5-3)*(var_y1_us_5-var_y1_us_3)
+
+#US bond price:
+t=4 #Time to maturity
+mean_z1_us_4=np.exp(-mean_y1_us_4*t+(t**2*var_y1_us_4)/2)
+var_z1_us_4=np.exp(-2*t*mean_y1_us_4+(t**2)*var_y1_us_4)*(np.exp((t**2)*(var_y1_us_4))-1)
+
+
+#EU bond yield:
+    #mean:
+mean_y1_eu_4=mean_X1[y_EUR_3_index]+(4-3)/(5-3)*(mean_X1[y_EUR_5_index]-mean_X1[y_EUR_3_index])
+
+    #variance:
+var_y1_eu_3=cov_X1[y_EUR_3_index, y_EUR_3_index]
+var_y1_eu_5=cov_X1[y_EUR_5_index, y_EUR_5_index]
+var_y1_eu_4=var_y1_eu_3+(4-3)/(5-3)*(var_y1_eu_5-var_y1_eu_3)
+
+#EU bond price:
+t=4
+mean_z1_eu_4=np.exp(-mean_y1_eu_4*t+(t**2*var_y1_eu_4)/2)
+var_z1_eu_4=np.exp(-2*t*mean_y1_eu_4+(t**2)*var_y1_eu_4)*(np.exp((t**2)*(var_y1_eu_4))-1)
+
+#Construct H1 vector:
+mean_log=[mean_log_FX1, mean_log_V1_us_local, mean_log_V1_eur, mean_y1_us_4, mean_y1_eu_4]
+print(mean_log)
+
+#Construct the mean P1 vector:
+mean_P1 = np.array([mean_FX1, mean_V1_us_local, mean_v1_eur, mean_z1_us_4, mean_z1_eu_4])
+print(mean_P1)
+
+
+
+#Interpolating and Filtering the covariance matrix:
+usd_3y_5y=covariance_matrix.loc[["3Y USD", "5Y USD"]]
+eur_3y_5y=covariance_matrix.loc[["3Y EUR", "5Y EUR"]]
+
+#Interpolating the 4-year yields:
+usd_4y=usd_3y_5y.loc["3Y USD"]+(usd_3y_5y.loc["5Y USD"]-usd_3y_5y.loc["3Y USD"])*(4-3)/(5-3)
+eur_4y=eur_3y_5y.loc["3Y EUR"]+(eur_3y_5y.loc["5Y EUR"]-eur_3y_5y.loc["3Y EUR"])*(4-3)/(5-3)
+
+#Add to covariance matrix:
+    #rows
+covariance_matrix.loc["4Y USD"]=usd_4y
+covariance_matrix.loc["4Y EUR"]=eur_4y
+
+    #columns
+covariance_matrix["4Y USD"]=usd_4y
+covariance_matrix["4Y EUR"]=eur_4y
+
+#Interpolate the 4-year bond yield variables:
+covariance_matrix.loc["4Y USD","4Y USD"]=usd_3y_5y.loc["3Y USD", "3Y USD"]+(usd_3y_5y.loc["5Y USD", "5Y USD"]-usd_3y_5y.loc["3Y USD", "3Y USD"])*(4-3)/(5-3)
+covariance_matrix.loc["4Y EUR","4Y EUR"]=eur_3y_5y.loc["3Y EUR", "3Y EUR"]+(eur_3y_5y.loc["5Y EUR", "5Y EUR"]-eur_3y_5y.loc["3Y EUR", "3Y EUR"])*(4-3)/(5-3)
+
+#Interpolate cross-covariances:
+cov_4y_us_eur=covariance_matrix.loc["3Y USD", "3Y EUR"]+(covariance_matrix.loc["5Y USD", "5Y EUR"]-covariance_matrix.loc["3Y USD", "3Y EUR"])*(4-3)/(5-3)
+covariance_matrix.loc["4Y USD", "4Y EUR"]=cov_4y_us_eur
+covariance_matrix.loc["4Y EUR", "4Y USD"]=cov_4y_us_eur
+
+#Filtering:
+required_variables=["fx_spot","EQV US", "EQV EUR", "4Y EUR", "4Y USD"]
+filtered_covariance_matrix=covariance_matrix.loc[required_variables, required_variables]
+
+#Covariance matrix to t=1:
+cov_mat_fil1=filtered_covariance_matrix*52
+
+print(cov_mat_fil1)
+
+
+
+
 
 # Mean and variance for lognormal bond prices
 mean_Z_US_4Y = -mean_y_US_4 * 4
@@ -57,12 +141,15 @@ var_Z_US_4Y = (4 ** 2) * var_y_US_4
 mean_Z_EUR_4Y = -mean_y_EUR_4 * 4
 var_Z_EUR_4Y = (4 ** 2) * var_y_EUR_4
 
+
+
+
 # Jacobian matrix for transformations
-J = np.zeros((5, len(X0)))
+J = np.zeros((5, len(x0)))
 
 # Fill Jacobian entries for each transformation
 # FX_1 = exp(log FX)
-J[0, log_FX_index] = np.exp(mean_log_FX)
+J[0, log_FX_index] = np.exp(mean_log_FX1)
 
 # V1_US = exp(log V_US)
 J[1, log_V_US_index] = np.exp(mean_log_V_US)
@@ -83,7 +170,7 @@ cov_P1 = J @ cov_X1 @ J.T
 
 # Output mean vector and covariance matrix of P1
 mean_P1 = np.array([
-    np.exp(mean_log_FX),
+    mean_FX1,
     np.exp(mean_log_V_US),
     np.exp(mean_log_V_EUR),
     np.exp(mean_Z_US_4Y),
