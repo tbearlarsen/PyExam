@@ -30,10 +30,11 @@ var_y0_us_5=cov_matrix[12,12]
 mean_z0_us_5_local=np.exp(-mean_y0_us_5*t+(t**2*var_y0_us_5)/2)
 var_z0_us_5_local=np.exp(-2*t*mean_y0_us_5+(t**2)*var_y0_us_5)*(np.exp((t**2)*(var_y0_us_5))-1)
 
-mean_z0_us_5=mean_z0_us_5_local/(x0[0]**2) #THIS IS CLEARLY WRONG - ASK FOR HELP!!
+#mean_z0_us_5=mean_z0_us_5_local/(x0[0]**2) #THIS IS CLEARLY WRONG - ASK FOR HELP!!
 
     #PnL:
-E_pnl_z_us=mean_P1_eur[3]-mean_z0_us_5
+#E_pnl_z_us=mean_P1_eur[3]-mean_z0_us_5
+E_pnl_z_us=mean_P1_eur[3]-mean_z0_us_5_local
 
 #Price of EUR bond:
     #Calculating Z0:
@@ -52,5 +53,15 @@ E_pnl1=np.array([E_pnl_fx,E_pnl_v_us,E_pnl_v_eur,E_pnl_z_us,E_pnl_z_eur])
 #Covariance matrix of the PnL1 vector:
 cov_pnl1=cov_P1_eur
 
-print(E_pnl1,cov_pnl1)
+#
+h=np.array([1,1,1,1,1])
+
+#Expected value of the PnL1 portfolio:
+E_pnl1_port=np.dot(h.T,E_pnl1)
+
+#Variances of the PnL1 portfolio:
+var_pnl1_port=np.dot(h.T,np.dot(cov_pnl1,h))
+
+
+
 
