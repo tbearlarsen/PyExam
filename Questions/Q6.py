@@ -1,8 +1,5 @@
-import pandas as pd
 import numpy as np
-from Data.Data import covariance_matrix, init_values, cov_matrix, x0, mean_vector, delta_t
-from scipy.stats import norm, lognorm
-import seaborn as sns
+from Data.Data import cov_matrix, x0, mean_vector
 from Questions.Q5 import mean_P1_eur, cov_P1_eur
 
 # Forward price calculation

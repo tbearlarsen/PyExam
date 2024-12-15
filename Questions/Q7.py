@@ -1,4 +1,4 @@
-from Questions.Q6 import E_pnl1_port, var_pnl1_port, h, E_pnl1, cov_pnl1, fx0
+from Questions.Q6 import E_pnl1, cov_pnl1, fx0
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -61,6 +61,7 @@ fig, ax = plt.subplots()
 for portfolio, data in portfolios.items():
     pnl_data = np.array([compute_metrics(data['hr'] * x, data['h2']) for x in hedge_ratios])
     ax.plot(pnl_data[:, 1], pnl_data[:, 0], label=f'Portfolio {portfolio}')
+
     # Optimal point
     optimal_pnl, optimal_std = compute_metrics(data['hr'], data['h2'])
     ax.scatter(optimal_std, optimal_pnl, color='red')
