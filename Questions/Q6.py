@@ -14,7 +14,7 @@ F0_1=fx0*np.exp(1*(x0[10]-x0[4]))
 E_pnl_fx=(1/F0_1)-mean_P1_eur[0]
 
 #EQV US in EUR:
-E_pnl_v_us=mean_P1_eur[1]-np.exp(x0[1])
+E_pnl_v_us=mean_P1_eur[1]-(np.exp(x0[1])/fx0)
 
 #EQV EUR:
 E_pnl_v_eur=mean_P1_eur[2]-np.exp(x0[2])
@@ -26,14 +26,13 @@ t=5
 mean_y0_us_5=mean_x0[12]
 var_y0_us_5=cov_matrix[12,12]
 
-mean_z0_us_5_local=np.exp(-mean_y0_us_5*t+(t**2*var_y0_us_5)/2)
+mean_z0_us_5_local=np.exp(-mean_y0_us_5*t+(t**2*var_y0_us_5)/2) #This formula is different from the one that the others use (it produces a slightly differetn result)
 var_z0_us_5_local=np.exp(-2*t*mean_y0_us_5+(t**2)*var_y0_us_5)*(np.exp((t**2)*(var_y0_us_5))-1)
 
-#mean_z0_us_5=mean_z0_us_5_local/(x0[0]**2) #THIS IS CLEARLY WRONG - ASK FOR HELP!!
+mean_z0_us_5=mean_z0_us_5_local/fx0
 
     #PnL:
-#E_pnl_z_us=mean_P1_eur[3]-mean_z0_us_5
-E_pnl_z_us=mean_P1_eur[3]-mean_z0_us_5_local
+E_pnl_z_us=mean_P1_eur[3]-mean_z0_us_5
 
 #Price of EUR bond:
     #Calculating Z0:

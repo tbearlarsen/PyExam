@@ -1,8 +1,8 @@
 import pandas as pd
-#covariance_matrix=pd.read_excel(r"/Users/osito/Library/CloudStorage/OneDrive-CBS-CopenhagenBusinessSchool/Masters/3. Semester/Library/PyExam/Data/covariance_matrix.xlsx", index_col=0)
-covariance_matrix=pd.read_excel(r"C:\Users\thorb\Documents\Github Repositories\PyExam\Data\covariance_matrix.xlsx", index_col=0)
-#init_values=pd.read_excel(r"/Users/osito/Library/CloudStorage/OneDrive-CBS-CopenhagenBusinessSchool/Masters/3. Semester/Library/PyExam/Data/init_values.xlsx", index_col=0)
-init_values=pd.read_excel(r"C:\Users\thorb\Documents\Github Repositories\PyExam\Data\init_values.xlsx", index_col=0)
+covariance_matrix=pd.read_excel(r"/Users/osito/Library/CloudStorage/OneDrive-CBS-CopenhagenBusinessSchool/Masters/3. Semester/Library/PyExam/Data/covariance_matrix.xlsx", index_col=0)
+#covariance_matrix=pd.read_excel(r"C:\Users\thorb\Documents\Github Repositories\PyExam\Data\covariance_matrix.xlsx", index_col=0)
+init_values=pd.read_excel(r"/Users/osito/Library/CloudStorage/OneDrive-CBS-CopenhagenBusinessSchool/Masters/3. Semester/Library/PyExam/Data/init_values.xlsx", index_col=0)
+#init_values=pd.read_excel(r"C:\Users\thorb\Documents\Github Repositories\PyExam\Data\init_values.xlsx", index_col=0)
 
 #Transform data
 import numpy as np

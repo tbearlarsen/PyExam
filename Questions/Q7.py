@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 
 # Given covariance matrix components
 sigma_pnl_11=cov_pnl1.iloc[0,0]
-sigma_pnl_12=cov_pnl1.iloc[0,1:]  # Example, adjust as needed
+sigma_pnl_12=cov_pnl1.iloc[0,1:]
 
 print(sigma_pnl_11)
 print(sigma_pnl_12)
