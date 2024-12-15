@@ -2,8 +2,84 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.optimize import minimize
 from Questions.Q6 import E_pnl1, cov_pnl1, fx0
+import cvxpy as cp
 
-# True parameters (use E_pnl1 and cov_pnl1 from Q6/Q9)
+
+##STRATEGY 1: PRE-SPECIFIED HEDGE RATIOS
+# Define true parameters (from Q6/Q9)
+mu = E_pnl1  # Expected returns
+cov_matrix = cov_pnl1.to_numpy()  # Covariance matrix
+fx_rate = fx0  # Forward exchange rate
+
+# Step 1: Calculate minimum-variance hedge ratios
+sigma_usd_usd = cov_matrix[0, 0]
+sigma_i_usd = cov_matrix[0, 1:]
+hedge_ratios = -sigma_i_usd / sigma_usd_usd
+
+# Step 2: Define the optimization function using CVXPY
+def optimize_portfolio_cvxpy(target_pnl, mu, cov_matrix):
+    num_assets = len(mu)
+
+    # Define variables
+    w = cp.Variable(num_assets)
+
+    # Define the objective function (portfolio variance)
+    portfolio_variance = cp.quad_form(w, cov_matrix)
+
+    # Define constraints
+    constraints = [
+        cp.sum(w) == 1,  # Budget constraint
+        w @ mu == target_pnl,  # Target expected PnL
+        w >= 0  # Non-shorting constraint
+    ]
+
+    # Solve the optimization problem
+    problem = cp.Problem(cp.Minimize(portfolio_variance), constraints)
+    problem.solve()
+
+    return w.value, problem.value  # Return optimal weights and variance
+
+# Step 3: Generate the efficient frontier
+pnl_targets = np.linspace(mu.min(), mu.max(), 50)  # Define PnL targets
+variances = []
+expected_pnls = []
+portfolios = []  # Store portfolio weights for each PnL target
+
+for target in pnl_targets:
+    weights, variance = optimize_portfolio_cvxpy(target, mu, cov_matrix)
+    variances.append(variance)
+    expected_pnls.append(target)
+    portfolios.append(weights)
+
+variances = np.array(variances)
+expected_pnls = np.array(expected_pnls)
+
+# Step 4: Plot the efficient frontier with portfolios
+plt.figure(figsize=(10, 6))
+
+# Plot efficient frontier
+plt.plot(variances, expected_pnls, label="Efficient Frontier (Strategy 1)", color="blue")
+
+# Plot individual portfolios
+for i, (variance, pnl, weights) in enumerate(zip(variances, expected_pnls, portfolios)):
+    plt.scatter(variance, pnl, label=f"Portfolio {i+1}" if i < 5 else "", alpha=0.7, color="orange")
+    if i < 5:  # Annotate the first few portfolios for illustration
+        plt.annotate(f"P{i+1}", (variance, pnl), fontsize=9)
+
+plt.xlabel("Portfolio Variance (Risk)")
+plt.ylabel("Expected PnL (Return)")
+plt.title("Efficient Frontier with Portfolios (Strategy 1)")
+plt.legend(["Efficient Frontier", "Portfolios"])
+plt.grid(True)
+plt.show()
+
+
+
+
+
+
+
+"""# True parameters (use E_pnl1 and cov_pnl1 from Q6/Q9)
 mu = E_pnl1  # Expected returns
 cov_matrix = cov_pnl1  # Covariance matrix
 fx_rate = fx0  # Forward exchange rate (from Q7)
@@ -87,7 +163,7 @@ plt.ylabel('Expected PnL (Return)')
 plt.title('Efficient Frontiers for Different Portfolio Optimization Strategies')
 plt.legend()
 plt.grid(True)
-plt.show()
+plt.show()"""
 
 
 
