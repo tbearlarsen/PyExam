@@ -16,10 +16,6 @@ h2_A=np.array([1,0,0,0])
 optimal_h1_A=-np.dot(sigma_pnl_12,h2_A)/sigma_pnl_11
 usd_exposure_A=(h2_A[0]+h2_A[2])*fx0
 hr_A=optimal_h1_A/usd_exposure_A
-"""weights_A=np.concatenate(([optimal_h1_A],h2_A))
-port_std_A=np.sqrt(weights_A @ cov_pnl1 @ weights_A)
-E_pnl_A=weights_A @ E_pnl1
-"""
 
 #Portfolio B:
 h2_B=np.array([0,0,1,0])

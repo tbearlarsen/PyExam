@@ -65,6 +65,7 @@ print(mean_log_p1_eur) """
 
 # Transform the covariance matrix
 cov_pnl1 = C @ cov_P1_eur @ C.T
+cov_pnl1.shape
 
 columns = ['-1/FX_1', 'V_USD_1 in EUR', 'V_EUR_1', 'Z_4Y_USD in EUR', 'Z_4Y_EUR']
 cov_pnl_df = pd.DataFrame(cov_pnl1, index=columns, columns=columns)
