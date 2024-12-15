@@ -1,4 +1,4 @@
-from Questions.Q6 import E_pnl1_port, var_pnl1_port, h, E_pnl1, cov_pnl1
+from Questions.Q6 import E_pnl1_port, var_pnl1_port, h, E_pnl1, cov_pnl1, fx0
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -10,60 +10,68 @@ print(sigma_pnl_11)
 print(sigma_pnl_12)
 
 
-# Portfolios
+#CALCULATING THE HEDGE RATIO FOR EACH PORTFOLIO:
+#Portfolio A:
+h2_A=np.array([1,0,0,0])
+optimal_h1_A=-np.dot(sigma_pnl_12,h2_A)/sigma_pnl_11
+usd_exposure_A=(h2_A[0]+h2_A[2])*fx0
+hr_A=optimal_h1_A/usd_exposure_A
+"""weights_A=np.concatenate(([optimal_h1_A],h2_A))
+port_std_A=np.sqrt(weights_A @ cov_pnl1 @ weights_A)
+E_pnl_A=weights_A @ E_pnl1
+"""
+
+#Portfolio B:
+h2_B=np.array([0,0,1,0])
+optimal_h1_B=-np.dot(sigma_pnl_12,h2_B)/sigma_pnl_11
+usd_exposure_B=(h2_A[0]+h2_A[2])*fx0
+hr_B=optimal_h1_B/usd_exposure_B
+
+#Portfolio C:
+h2_C=np.array([0.2, 0.2, 0.3, 0.3])
+optimal_h1_C=-np.dot(sigma_pnl_12,h2_C)/sigma_pnl_11
+usd_exposure_C=(h2_A[0]+h2_A[2])*fx0
+hr_C=optimal_h1_C/usd_exposure_C
+
+print(hr_A,hr_B,hr_C)
+
 portfolios = {
-    "A": np.array([1, 0, 0, 0]),
-    "B": np.array([0, 0, 0, 1]),
-    "C": np.array([0.2, 0.2, 0.3, 0.3])
+    'A': {'h2': np.array([1, 0, 0, 0]), 'hr': hr_A},
+    'B': {'h2': np.array([0, 0, 1, 0]), 'hr': hr_B},
+    'C': {'h2': np.array([0.2, 0.2, 0.3, 0.3]), 'hr': hr_C}
 }
 
 
-optimal_h1={}
-for portfolio_name, h2 in portfolios.items():
-    h1=-np.dot(sigma_pnl_12,h2)/sigma_pnl_11
-    optimal_h1[portfolio_name]=h1
+#PLOTTING the combinations of standard deviation and expected PnL for hedge ratios ranging from -1 to 1.5
+hedge_ratios = np.linspace(-1, 1.5, 100)  # Creates a range of hedge ratios from -1 to 1.5
 
+# Define a function to compute PnL and variance for a given hedge ratio
+def compute_metrics(h1, h2):
+    h = np.concatenate(([h1], h2))
+    expected_pnl = np.dot(h, E_pnl1)  # E_pnl1 should be defined in your imports
+    variance_pnl = np.dot(h.T, np.dot(cov_pnl1, h))
+    std_dev_pnl = np.sqrt(variance_pnl)
 
-# Function to calculate optimal h1 and plot
-def plot_pnl(portfolio_label, h2):
-    hedge_ratios = np.linspace(-1, 1.5, 100)
-    std_devs = []
-    expected_pnls = []
+    return expected_pnl, std_dev_pnl
 
-    # Optimal h1
-    h1_optimal = -np.dot(sigma_pnl_12, h2) / sigma_pnl_11
-    h = np.append(h1_optimal, h2)
-    optimal_pnl = np.dot(h, E_pnl1)  # Expected PnL
-    optimal_std = np.sqrt(np.dot(h.T, np.dot(cov_pnl1, h)))  # Standard deviation
+# Initialize plots
+fig, ax = plt.subplots()
 
-    for ratio in hedge_ratios:
-        h1 = ratio * np.sum(h2)  # Define h1 based on the hedge ratio
-        h = np.append(h1, h2)
-        std_devs.append(np.sqrt(np.dot(h.T, np.dot(cov_pnl1, h))))
-        expected_pnls.append(np.dot(h, E_pnl1))
+# Plotting using dictionary
+for portfolio, data in portfolios.items():
+    pnl_data = np.array([compute_metrics(data['hr'] * x, data['h2']) for x in hedge_ratios])
+    ax.plot(pnl_data[:, 1], pnl_data[:, 0], label=f'Portfolio {portfolio}')
+    # Optimal point
+    optimal_pnl, optimal_std = compute_metrics(data['hr'], data['h2'])
+    ax.scatter(optimal_std, optimal_pnl, color='red')
+    ax.text(optimal_std, optimal_pnl, f' Optimal {portfolio}', fontsize=9)
 
-    plt.plot(std_devs, expected_pnls, label=f"Portfolio {portfolio_label}")
-    plt.scatter(optimal_std, optimal_pnl, color='red', label=f"Optimal {portfolio_label} ({h1_optimal:.2f})")
-
-"""# Expected PnL vector and Covariance Matrix
-E_pnl1 = np.array([-0.0152296548, 0.0231674692, 0.0747645957, -270.481033, 0.0191960561])
-cov_pnl1 = np.array([...])  # Full covariance matrix"""
-
-for label, h2 in portfolios.items():
-    plot_pnl(label, h2)
-
-plt.xlabel('Standard Deviation')
-plt.ylabel('Expected PnL')
-plt.title('PnL vs. Standard Deviation for Different Hedge Ratios')
-plt.legend()
+ax.set_xlabel('Standard Deviation of PnL')
+ax.set_ylabel('Expected PnL')
+ax.set_title('PnL vs Standard Deviation for Various Hedge Ratios')
+ax.legend()
 plt.grid(True)
 plt.show()
-
-
-
-
-
-
 
 
 
