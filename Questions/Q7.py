@@ -43,12 +43,12 @@ portfolios = {
 
 
 #PLOTTING the combinations of standard deviation and expected PnL for hedge ratios ranging from -1 to 1.5
-hedge_ratios = np.linspace(-1, 1.5, 100)  # Creates a range of hedge ratios from -1 to 1.5
+hedge_ratios = np.linspace(-1, 1.5, 100)
 
 # Define a function to compute PnL and variance for a given hedge ratio
 def compute_metrics(h1, h2):
     h = np.concatenate(([h1], h2))
-    expected_pnl = np.dot(h, E_pnl1)  # E_pnl1 should be defined in your imports
+    expected_pnl = np.dot(h, E_pnl1)
     variance_pnl = np.dot(h.T, np.dot(cov_pnl1, h))
     std_dev_pnl = np.sqrt(variance_pnl)
 
