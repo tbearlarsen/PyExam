@@ -54,27 +54,26 @@ mean_P1_eur=np.array([mu_1, mu_2, mu_3, mu_4, mu_5])
 #The distribution of the P1 EUR:
 mean_P1_eur, cov_P1_eur
 
-
 #Compare analytical distribution for V_US with the simulated distribution:
 v1_us_mean=mean_P1_eur[1]
 v1_us_var=cov_P1_eur.loc["EQV US t1", "EQV US t1"]
 
-# Number of simulations
+#Number of simulations:
 num_simulations = 10000
-np.random.seed(42)  # For reproducibility
+np.random.seed(42)
 
-# Simulate V1^US in EUR
+#Simulate V1^US in EUR:
 simulated_v1_us_eur = np.random.lognormal(
-    mean=np.log(v1_us_mean) - 0.5 * v1_us_var,  # Adjust mean for lognormal distribution
+    mean=np.log(v1_us_mean) - 0.5 * v1_us_var,  #Adjust mean for log-normal distribution
     sigma=np.sqrt(v1_us_var),
     size=num_simulations
 )
 
-# Analytical distribution parameters
+#Analytical distribution parameters:
 x_values = np.linspace(min(simulated_v1_us_eur), max(simulated_v1_us_eur), 1000)
 pdf_values = lognorm.pdf(x_values, s=np.sqrt(v1_us_var), scale=v1_us_mean)
 
-# Plotting the distributions
+#Plotting the distributions:
 plt.figure(figsize=(10, 6))
 plt.hist(simulated_v1_us_eur, bins=50, alpha=0.5, density=True, label='Simulated Distribution')
 plt.plot(x_values, pdf_values, 'r', label='Analytical Distribution', linewidth=2)

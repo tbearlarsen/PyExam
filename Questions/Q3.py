@@ -1,45 +1,54 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from Data.Data import covariance_matrix, init_values, cov_matrix, x0, mean_vector, delta_t
-from scipy.stats import norm, lognorm
+from Data.Data import cov_matrix, x0
+from scipy.stats import lognorm
 
-# Parameters
-initial_yield_index = 6  # Assuming the 5-year yield is at index 4 in the state vector
-tau_initial = 5  # Initial maturity
-tau_horizon = 4  # Maturity at horizon
-num_simulations = 10000
+#Define yield parameters for interpolation:
+y0_us_3=x0[11]
+y0_us_5=x0[12]
+var_delta_y0_us_3=cov_matrix[11,11]
+var_delta_y0_us_5=cov_matrix[12,12]
 
-# Initial values and parameters
-initial_yield = x0[initial_yield_index]
-mu_yield = mean_vector[initial_yield_index]
-sigma_yield = np.sqrt(cov_matrix[initial_yield_index, initial_yield_index])
+#4-year yield interpolation:
+y0_us_4=y0_us_3+(4-3)/(5-3)*(y0_us_5-y0_us_3)
+var_delta_y0_us_4=var_delta_y0_us_3+((4-3)/(5-3)*(var_delta_y0_us_5-var_delta_y0_us_3))
+std_delta_y0_us_4=np.sqrt(var_delta_y0_us_4)
 
-# Simulate weekly changes in yield
+#Define simulation parameters:
 np.random.seed(42)
-simulated_yields = np.random.normal(mu_yield, sigma_yield, size=num_simulations)
+num_simulations=10000
+time_horizon=52
+tau_1=4
 
-# Calculate bond prices at horizon
-prices_horizon = np.exp(-simulated_yields * tau_horizon)
+#Simulation of weekly changes in 4-year yield:
+delta_yt=np.random.normal(loc=0, scale=std_delta_y0_us_4, size=(time_horizon, num_simulations))
+total_change=np.sum(delta_yt, axis=0)
 
-# Analytical distribution parameters
-mu_price = -tau_horizon * mu_yield
-sigma_price = np.sqrt(tau_horizon**2 * sigma_yield**2)
+#4-year yield at t=1:
+y1_us_4=y0_us_4+total_change
 
-# Plot simulated and analytical distributions
-plt.figure(figsize=(10, 6))
+#4-year bond price at t=1:
+z1_us_4=np.exp(-y1_us_4*tau_1)
 
-# Simulated distribution
-plt.hist(prices_horizon, bins=50, alpha=0.5, label="Simulated Distribution", density=True)
 
-# Analytical lognormal distribution
-x = np.linspace(min(prices_horizon), max(prices_horizon), 500)
-pdf = lognorm.pdf(x, s=sigma_price, scale=np.exp(mu_price))
-plt.plot(x, pdf, label="Analytical Distribution", color='red')
+#Analytical distribution parameters:
+mean_log_z1_us_4=-tau_1*y0_us_4
+std_log_z1_us_4=np.sqrt(tau_1**2*52*std_delta_y0_us_4**2)
 
-# Labels and legend
-plt.title("Comparison of Simulated and Analytical Distributions for Zero Coupon Bond")
-plt.xlabel("Price of Zero Coupon Bond at Horizon")
-plt.ylabel("Density")
+
+#Analytical PDF for log-normal distribution:
+x=np.linspace(np.min(z1_us_4), np.max(z1_us_4), 1000)
+an_pdf=lognorm.pdf(x, s=std_log_z1_us_4, scale=np.exp(mean_log_z1_us_4))
+
+#Plot the histogram of simulated values:
+plt.hist(z1_us_4, bins=50, density=True, color='skyblue', edgecolor='black', label='Simulated Distribution')
+
+#Plot the analytical PDF:
+plt.plot(x, an_pdf, 'r-', lw=2, label='Analytical PDF (Log-normal)')
+
+#Combining the plots:
+plt.xlabel('Bond Price (Z_t1) at t=1')
+plt.ylabel('Density')
 plt.legend()
-plt.grid(True)
+plt.grid(True, linestyle='--', linewidth=0.5)
 plt.show()
