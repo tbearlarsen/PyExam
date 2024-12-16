@@ -72,5 +72,7 @@ cov_pnl_df = pd.DataFrame(cov_pnl1, index=columns, columns=columns)
 print(cov_pnl_df)
 
 
-
+print(E_pnl1)
+print(cov_pnl1)
+print(fx0)
 

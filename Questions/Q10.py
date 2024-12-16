@@ -1,175 +1,264 @@
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 from scipy.optimize import minimize
-from Questions.Q6 import E_pnl1, cov_pnl1, fx0
 import cvxpy as cp
+from Questions.Q6 import E_pnl1, cov_pnl1, fx0
+from Questions.Q7 import optimal_hr
 
+#STRATEGY 1:
+# Input Data
+means = E_pnl1
+cov_matrix = cov_pnl1
+hedge_ratios = optimal_hr[0:2]
 
-##STRATEGY 1: PRE-SPECIFIED HEDGE RATIOS
-# Define true parameters (from Q6/Q9)
-mu = E_pnl1  # Expected returns
-cov_matrix = cov_pnl1.to_numpy()  # Covariance matrix
-fx_rate = fx0  # Forward exchange rate
+num_assets = len(means)
 
-# Step 1: Calculate minimum-variance hedge ratios
-sigma_usd_usd = cov_matrix[0, 0]
-sigma_i_usd = cov_matrix[0, 1:]
-hedge_ratios = -sigma_i_usd / sigma_usd_usd
+# Pre-specified hedge ratios
+fx_hedge_bond = hedge_ratios[1]  # Hedge ratio for asset 3
+fx_hedge_equity = hedge_ratios[0]  # Hedge ratio for asset 1
 
-# Step 2: Define the optimization function using CVXPY
-def optimize_portfolio_cvxpy(target_pnl, mu, cov_matrix):
-    num_assets = len(mu)
+# Generate return targets
+mu_targets = np.linspace(min(means), max(means), 500)
 
-    # Define variables
-    w = cp.Variable(num_assets)
+# Define CVXPY variables and constraints
+weights = cp.Variable(num_assets)
 
-    # Define the objective function (portfolio variance)
-    portfolio_variance = cp.quad_form(w, cov_matrix)
+constraints = [
+    cp.sum(weights[1:]) == 1,  # Sum of weights excluding forward contract
+    weights[1:] >= 0,  # No shorting for assets
+    weights[0] == fx_hedge_equity * weights[1] + fx_hedge_bond * weights[3],  # Hedge ratio constraint
+]
 
-    # Define constraints
-    constraints = [
-        cp.sum(w) == 1,  # Budget constraint
-        w @ mu == target_pnl,  # Target expected PnL
-        w >= 0  # Non-shorting constraint
-    ]
+# Storage for results
+portfolio_weights = []
+portfolio_variances = []
 
-    # Solve the optimization problem
-    problem = cp.Problem(cp.Minimize(portfolio_variance), constraints)
-    problem.solve()
+# Solve for each target return
+for pnl_target in mu_targets:
+    # Add target return constraint
+    constraints.append(weights @ means == pnl_target)
 
-    return w.value, problem.value  # Return optimal weights and variance
+    # Define the optimization problem (minimize portfolio variance)
+    objective = cp.Minimize(cp.quad_form(weights, cov_matrix))
+    problem = cp.Problem(objective, constraints)
 
-# Step 3: Generate the efficient frontier
-pnl_targets = np.linspace(mu.min(), mu.max(), 50)  # Define PnL targets
-variances = []
-expected_pnls = []
-portfolios = []  # Store portfolio weights for each PnL target
+    try:
+        # Solve the optimization problem
+        problem.solve(solver=cp.SCS)
+        if weights.value is not None:
+            portfolio_weights.append(weights.value)
+            portfolio_variances.append(weights.value @ cov_matrix @ weights.value)
+    except Exception as e:
+        print(f"Optimization failed for pnl_target={pnl_target}: {e}")
 
-for target in pnl_targets:
-    weights, variance = optimize_portfolio_cvxpy(target, mu, cov_matrix)
-    variances.append(variance)
-    expected_pnls.append(target)
-    portfolios.append(weights)
+    # Remove target return constraint for next iteration
+    constraints.pop()
 
-variances = np.array(variances)
-expected_pnls = np.array(expected_pnls)
+# Convert results to arrays for further analysis
+portfolio_weights = np.array(portfolio_weights)
+portfolio_std = np.sqrt(portfolio_variances)
+portfolio_returns = portfolio_weights @ means
 
-# Step 4: Plot the efficient frontier with portfolios
+# Identify key portfolios
+min_var_index = np.argmin(portfolio_variances)
+max_sharpe_index = np.argmax(portfolio_returns / portfolio_std)
+
+# Visualization
 plt.figure(figsize=(10, 6))
 
 # Plot efficient frontier
-plt.plot(variances, expected_pnls, label="Efficient Frontier (Strategy 1)", color="blue")
+plt.plot(portfolio_std, portfolio_returns, label='Efficient Frontier', color='blue', linewidth=2)
 
-# Plot individual portfolios
-for i, (variance, pnl, weights) in enumerate(zip(variances, expected_pnls, portfolios)):
-    plt.scatter(variance, pnl, label=f"Portfolio {i+1}" if i < 5 else "", alpha=0.7, color="orange")
-    if i < 5:  # Annotate the first few portfolios for illustration
-        plt.annotate(f"P{i+1}", (variance, pnl), fontsize=9)
+# Individual assets and forward contract
+for i, (mean, std) in enumerate(zip(means, np.sqrt(np.diag(cov_matrix)))):
+    label = 'Forward' if i == 0 else f'Asset {i}'
+    plt.scatter(std, mean, label=label, zorder=5)
 
-plt.xlabel("Portfolio Variance (Risk)")
-plt.ylabel("Expected PnL (Return)")
-plt.title("Efficient Frontier with Portfolios (Strategy 1)")
-plt.legend(["Efficient Frontier", "Portfolios"])
-plt.grid(True)
+# Highlight minimum variance and maximum Sharpe portfolios
+plt.scatter(portfolio_std[min_var_index], portfolio_returns[min_var_index],
+            color='black', marker='o', s=150, label='Min Variance Portfolio', edgecolors='white', zorder=6)
+plt.scatter(portfolio_std[max_sharpe_index], portfolio_returns[max_sharpe_index],
+            color='gold', marker='X', s=150, label='Max Sharpe Portfolio', edgecolors='black', zorder=6)
+
+# Add titles, labels, legend, and grid
+plt.title('Refined Mean-Variance Efficient Frontier with Forward Contract')
+plt.xlabel('Portfolio Risk (Standard Deviation)')
+plt.ylabel('Portfolio Return')
+plt.legend()
+plt.grid()
+plt.show()
+
+# Summarize portfolio results
+portfolio_summaries = [
+    {
+        'Portfolio Type': 'Min Variance',
+        'Risk': portfolio_std[min_var_index],
+        'Return': portfolio_returns[min_var_index],
+        'Weights': portfolio_weights[min_var_index]
+    },
+    {
+        'Portfolio Type': 'Max Sharpe',
+        'Risk': portfolio_std[max_sharpe_index],
+        'Return': portfolio_returns[max_sharpe_index],
+        'Weights': portfolio_weights[max_sharpe_index]
+    }
+]
+
+# Display results
+portfolio_summary_df = pd.DataFrame(portfolio_summaries)
+print(portfolio_summary_df)
+
+
+#STRATEGY 2:
+# Given data
+means_no_forward = np.array([0.0769594, 0.0747646, 0.02660308, 0.01919606])
+cov_matrix_no_forward = np.array([
+    [0.025256, 0.019484, 0.002351, 0.000531],
+    [0.019484, 0.027958, -0.000440, 0.000355],
+    [0.002351, -0.000440, 0.003637, 0.000324],
+    [0.000531, 0.000355, 0.000324, 0.000494],
+])
+n = len(means_no_forward)
+
+# Variables
+weights = cp.Variable(n)
+budget_constraint = cp.sum(weights) == 1
+non_shorting_constraint = weights >= 0
+
+# Efficient frontier calculation with 1000 PnL targets
+PnL_targets = np.linspace(min(means_no_forward), max(means_no_forward), 1000)
+optimal_weights = []
+
+for target in PnL_targets:
+    objective = cp.Minimize(cp.quad_form(weights, cov_matrix_no_forward))
+    constraints = [
+        budget_constraint,
+        non_shorting_constraint,
+        means_no_forward @ weights >= target
+    ]
+    problem = cp.Problem(objective, constraints)
+    problem.solve()
+    optimal_weights.append(weights.value)
+
+h2 = np.array(optimal_weights)
+means = np.array([-0.01522965, 0.0769594, 0.0747646, 0.02660308, 0.01919606])
+data = {
+    0: [0.005220, -0.003732, -0.000248, -0.004000, 0.000071],
+    1: [-0.003732, 0.025256, 0.019484, 0.002351, 0.000531],
+    2: [-0.000248, 0.019484, 0.027958, -0.000440, 0.000355],
+    3: [-0.004000, 0.002351, -0.000440, 0.003637, 0.000324],
+    4: [0.000071, 0.000531, 0.000355, 0.000324, 0.000494]
+}
+cov_matrix = pd.DataFrame(data)
+
+block_11 = cov_matrix.iloc[:1, :1].values
+block_12 = cov_matrix.iloc[:1, 1:].values
+block_22 = cov_matrix.iloc[1:, 1:].values
+
+h1_values = [-np.dot(block_12, h2_vector) / block_11 for h2_vector in h2]
+h1_values = np.array([h1.item() for h1 in h1_values])
+
+combined_array = np.hstack((h1_values.reshape(-1, 1), h2))
+
+# Optimization using combined weights and visualization of the efficient frontier
+PnL_values = []
+variances = []
+
+for weights in combined_array:
+    pnl = np.dot(means, weights)
+    variance = np.dot(weights, np.dot(cov_matrix.values, weights))
+    PnL_values.append(pnl)
+    variances.append(variance)
+
+# Plotting the efficient frontier with asset labels
+plt.figure(figsize=(12, 7))
+plt.plot(variances, PnL_values, label="Efficient Frontier")
+plt.xlabel("Portfolio Variance")
+plt.ylabel("Portfolio PnL")
+plt.title("Efficient Frontier")
+
+# Annotating assets using their means and variances from the covariance matrix
+asset_labels = ["Forward", "Asset 1", "Asset 2", "Asset 3", "Asset 4"]
+variances_assets = np.diag(cov_matrix.values)  # Variances of individual assets
+
+for i, label in enumerate(asset_labels):
+    plt.scatter(variances_assets[i], means[i], label=label, s=50)  # Scatter the individual asset points
+
+plt.legend()
+plt.grid()
 plt.show()
 
 
+#STRATEGY 3:
+# Data input
+means = E_pnl1
+cov_matrix = cov_pnl1
+forward_rate = fx0
+budget = 1  # in EUR
+
+# Convert USD assets to EUR using the forward exchange rate
+conversion_factors = np.array([1, 1, 1 / forward_rate, 1, 1 / forward_rate])
+means_eur = means * conversion_factors
+
+# Covariance matrix adjusted for currency conversion
+cov_matrix_eur = cov_matrix * conversion_factors[:, None] * conversion_factors[None, :]
 
 
-
-
-
-"""# True parameters (use E_pnl1 and cov_pnl1 from Q6/Q9)
-mu = E_pnl1  # Expected returns
-cov_matrix = cov_pnl1  # Covariance matrix
-fx_rate = fx0  # Forward exchange rate (from Q7)
-
-
-# Helper function to calculate portfolio variance
+# Define optimization functions
 def portfolio_variance(weights, cov_matrix):
-    return np.dot(weights.T, np.dot(cov_matrix, weights))
+    return weights.T @ cov_matrix @ weights
 
 
-# Helper function to optimize a portfolio for a given PnL target
-def optimize_portfolio(target_pnl, hedge_ratio=None):
-    num_assets = len(mu)
-    initial_weights = np.ones(num_assets) / num_assets  # Start with equal weights
-
-    # Objective: Minimize portfolio variance
-    def objective(weights):
-        return portfolio_variance(weights, cov_matrix)
-
-    # Constraint: Expected PnL must match the target
-    constraints = [{'type': 'eq', 'fun': lambda w: np.dot(w, mu) - target_pnl}]
-
-    # Constraint: Non-shorting (weights >= 0)
-    bounds = [(0, None) for _ in range(num_assets)]
-
-    # Apply hedge ratio if provided
-    if hedge_ratio is not None:
-        def hedge_constraint(weights):
-            usd_exposure = np.sum(weights[:2]) * fx_rate  # Adjust USD exposure
-            return usd_exposure * hedge_ratio  # Hedge the USD exposure
-
-        constraints.append({'type': 'eq', 'fun': hedge_constraint})
-
-    # Constraint: Budget constraint (weights sum to 1)
-    constraints.append({'type': 'eq', 'fun': lambda w: np.sum(w) - 1})
-
-    # Perform optimization
-    result = minimize(objective, initial_weights, bounds=bounds, constraints=constraints)
-    return result.x, result.fun  # Return optimal weights and variance
+def portfolio_return(weights, means):
+    return weights.T @ means
 
 
-# Generate PnL targets for the efficient frontier
-pnl_targets = np.linspace(mu.min(), mu.max(), 50)
+# Efficient frontier calculation
+fine_targets = np.linspace(min(means_eur), max(means_eur), 500)  # Finer granularity
+results_refined = []
 
-# Strategy 1: Pre-specified hedge ratios (minimum-variance hedge ratios for each asset)
-hedge_ratios = -np.diag(cov_matrix) / fx_rate
-strategy1_results = []
-for target in pnl_targets:
-    weights, variance = optimize_portfolio(target, hedge_ratio=hedge_ratios)
-    strategy1_results.append((variance, target))
+for target in fine_targets:
+    constraints = [
+        {'type': 'eq', 'fun': lambda w: portfolio_return(w, means_eur) - target},  # Target return
+        {'type': 'eq', 'fun': lambda w: np.sum(w[1:]) - budget},  # Budget constraint (EUR assets)
+        {'type': 'ineq', 'fun': lambda w: w[1:]},  # No shorting for assets
+    ]
+    bounds = [(None, None)] + [(0, None)] * 4  # No bounds on forward, no shorting on assets
+    initial_weights = np.zeros(5)  # Start with zero weights
 
-# Strategy 2: No hedging initially, followed by minimum-variance hedge ratio
-strategy2_results = []
-for target in pnl_targets:
-    # Step 1: Optimize portfolio without hedging
-    weights, variance = optimize_portfolio(target, hedge_ratio=None)
-    # Step 2: Apply minimum-variance hedge ratio separately
-    hedge_ratio = -np.diag(cov_matrix) / fx_rate
-    strategy2_results.append((variance, target))
+    result = minimize(
+        portfolio_variance,
+        initial_weights,
+        args=(cov_matrix_eur,),
+        constraints=constraints,
+        bounds=bounds,
+        method='SLSQP',  # Use a solver optimized for smoothness
+        options={'ftol': 1e-9}  # High precision
+    )
+    if result.success:
+        variance = result.fun
+        weights = result.x
+        results_refined.append((target, np.sqrt(variance), weights))
 
-# Strategy 3: Full-scale optimization (allow weights and hedge ratio to vary)
-strategy3_results = []
-for target in pnl_targets:
-    weights, variance = optimize_portfolio(target, hedge_ratio=None)  # Hedge ratio is part of optimization
-    strategy3_results.append((variance, target))
+# Extract refined results for plotting
+efficient_frontier_refined = pd.DataFrame(results_refined, columns=['Return', 'Risk', 'Weights'])
 
-# Convert results to arrays for plotting
-strategy1_results = np.array(strategy1_results)
-strategy2_results = np.array(strategy2_results)
-strategy3_results = np.array(strategy3_results)
-
-# Plot the Efficient Frontiers
+# Visualization
 plt.figure(figsize=(10, 6))
-plt.plot(strategy1_results[:, 0], strategy1_results[:, 1], label='Strategy 1: Pre-specified Hedge Ratios', marker='o')
-plt.plot(strategy2_results[:, 0], strategy2_results[:, 1], label='Strategy 2: No Hedge, Min-Var Hedge Ratio',
-         marker='x')
-plt.plot(strategy3_results[:, 0], strategy3_results[:, 1], label='Strategy 3: Full-Scale Optimization', marker='s')
 
-plt.xlabel('Portfolio Variance (Risk)')
-plt.ylabel('Expected PnL (Return)')
-plt.title('Efficient Frontiers for Different Portfolio Optimization Strategies')
+# Refined efficient frontier
+plt.plot(efficient_frontier_refined['Risk'], efficient_frontier_refined['Return'], label='Efficient Frontier (Refined)',
+         color='blue')
+
+# Individual assets and forward contract
+for i, (mean, std) in enumerate(zip(means_eur, np.sqrt(np.diag(cov_matrix_eur)))):
+    label = 'Forward' if i == 0 else f'Asset {i}'
+    plt.scatter(std, mean, label=label)
+
+plt.title('Refined Mean-Variance Efficient Frontier with Forward Contract')
+plt.xlabel('Portfolio Risk (Standard Deviation)')
+plt.ylabel('Portfolio Return')
 plt.legend()
-plt.grid(True)
-plt.show()"""
-
-
-
-
-
-
-
-
-
+plt.grid()
+plt.show()

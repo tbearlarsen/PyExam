@@ -1,24 +1,23 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from Data.Data import covariance_matrix, init_values, cov_matrix, x0, mean_vector, delta_t
+from Data.Data import cov_matrix, x0, mean_vector
 
-# Simulation parameters
-time_horizon = 52  # Weekly steps (1 year)
-num_simulations = 10000  # Number of paths
+#Defining the parameters:
+mu=mean_vector
+time_horizon = 52
+num_simulations = 1000
 
-# Simulating X_t evolution
-np.random.seed(42)  # For reproducibility
-simulations = np.zeros((time_horizon + 1, len(x0), num_simulations))
-simulations[0] = x0[:, None]  # Set initial values
+#Simulating X_t evolution:
+np.random.seed(42)
+X_t = np.zeros((time_horizon + 1, len(x0), num_simulations))
+X_t[0] = x0[:, None]
 
 for t in range(1, time_horizon + 1):
-    # Generate random shocks
-    shocks = np.random.multivariate_normal(mean_vector, cov_matrix, num_simulations).T
-    # Update simulations for time t
-    simulations[t] = simulations[t - 1] + shocks
+    delta_X_t = np.random.multivariate_normal(mean_vector, cov_matrix, num_simulations).T
+    X_t[t] = X_t[t - 1] + delta_X_t
 
-# Extract log FX evolution
-log_fx_simulations = simulations[:, 0, :]  # log(FX_t) is the first variable
+#Extract log FX evolution:
+log_fx_simulations = X_t[:, 0, :]
 
 
 # Define the time points (from 0 to 52 weeks)

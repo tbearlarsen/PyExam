@@ -1,41 +1,63 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from Data.Data import covariance_matrix, init_values, cov_matrix, x0, mean_vector, delta_t
+from Data.Data import covariance_matrix, init_values, cov_matrix, x0, delta_t
 from scipy.stats import norm, lognorm
+from Questions.Q1 import X_t, mu
 
-# Parameters and simulation setup
-v_us_index = 1
-mean_vector = np.array([0.07 * delta_t, 0.06 * delta_t] + [0] * (len(covariance_matrix) - 2))
-num_simulations = 10000
+#Define parameters:
+time_horizon=52
+log_v0_us_local=x0[1]
+log_v1_us_local=X_t[time_horizon,1,:]
+v1_us_local=np.exp(log_v1_us_local)
 
-#Simulate the distribution of V1^US,local
-np.random.seed(42)
-simulated_shocks = np.random.multivariate_normal(mean_vector, cov_matrix, num_simulations)
-simulated_v1_us_local = x0[v_us_index] + simulated_shocks[:, v_us_index]
-#simulated_v1_us_local = np.exp(x0[v_us_index] + simulated_shocks[:, v_us_index])
+#Plot distribution of V_1^US,local (this is the simulation):
+plt.figure(figsize=(10, 6))
+plt.hist(v1_us_local, bins=50, color='skyblue', edgecolor='black', density=True)
+plt.xlabel('V_US,local^1')
+plt.ylabel('Density')
+plt.title('Distribution of V_US,local^1 at t=1 (USD)')
+plt.grid(True, linestyle='--', linewidth=0.5)
+plt.show()
 
-# Analytical distribution of V1^US,local
-mean_v1_us_local = x0[v_us_index] + mean_vector[v_us_index]
-#mean_v1_us_local = np.exp(x0[v_us_index] + mean_vector[v_us_index])
-std_v1_us_local = np.sqrt(cov_matrix[v_us_index, v_us_index])
+#Summary statistics:
+mean_V1_us_local=np.mean(v1_us_local)
+std_V1_us_local=np.std(v1_us_local)
 
-# Plot the simulated and analytical distributions
+print(mean_V1_us_local, std_V1_us_local)
+
+
+#Define analytical parameters:
+an_mean_delta_log_v=mu[1]
+an_std_delta_log_v=np.sqrt(cov_matrix[1,1])
+
+#Calculate log values:
+an_mean_log_v1_us_local=log_v0_us_local+time_horizon*an_mean_delta_log_v
+an_std_log_v1_us_local=np.sqrt(time_horizon)*an_std_delta_log_v
+
+#Log-normal disrtibution:
+an_mean_v1_us_local=np.exp(an_mean_log_v1_us_local+(an_std_log_v1_us_local**2)/2)
+an_var_v1_us_local=(np.exp(an_std_log_v1_us_local*2) - 1) * np.exp(2 * an_mean_log_v1_us_local + an_std_log_v1_us_local*2)
+an_std_v1_us_local=np.sqrt(an_var_v1_us_local)
+
+
+#Plot simulated and analytical distributions:
+x=np.linspace(np.min(v1_us_local), np.max(v1_us_local), 1000)
+an_pdf=lognorm.pdf(x, s=an_std_log_v1_us_local, scale=np.exp(an_mean_log_v1_us_local))
 plt.figure(figsize=(10, 6))
 
-# Simulated distribution
-plt.hist(simulated_v1_us_local, bins=50, alpha=0.5, label="Simulated Distribution", density=True)
+#Simulated histogram:
+plt.hist(v1_us_local, bins=50, color='skyblue', edgecolor='black', density=True, label='Simulated')
 
-# Analytical normal distribution
-x = np.linspace(mean_v1_us_local - 4 * std_v1_us_local, mean_v1_us_local + 4 * std_v1_us_local, 500) #generates the linearly spaced numbers over which the PDF will be calculated.
-pdf = norm.pdf(x, loc=mean_v1_us_local, scale=std_v1_us_local) #calculates the PDF
-#pdf = lognorm.pdf(x, s=std_v1_us_local, scale=mean_v1_us_local)
-plt.plot(x, pdf, label="Analytical Distribution", color='red')
-
-# Labels and legend
-plt.title("Comparison of Simulated and Analytical Distributions for V1^US,local")
-plt.xlabel("V1^US,local")
-plt.ylabel("Density")
+#Analytical PDF:
+plt.plot(x, an_pdf, "r-", lw=2, label='Analytical PDF (Log-normal)')
+plt.xlabel('V_US,local^1')
+plt.ylabel('Density')
+plt.title('Simulated vs Analytical Distribution of V_US,local^1 at t=1 (USD)')
 plt.legend()
-plt.grid(True)
+plt.grid(True, linestyle='--', linewidth=0.5)
 plt.show()
+
+
+
+
 

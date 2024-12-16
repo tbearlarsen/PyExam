@@ -29,6 +29,7 @@ optimal_h1_C=-np.dot(sigma_pnl_12,h2_C)/sigma_pnl_11
 usd_exposure_C=(h2_A[0]+h2_A[2])*fx0
 hr_C=optimal_h1_C/usd_exposure_C
 
+optimal_hr=np.array([hr_A,hr_B,hr_C])
 print(hr_A,hr_B,hr_C)
 
 portfolios = {
