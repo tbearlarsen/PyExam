@@ -2,7 +2,6 @@ import pandas as pd
 import numpy as np
 from Data.Data import covariance_matrix, cov_matrix, x0, mean_vector
 
-
 #Given parameters:
 mu = mean_vector
 Sigma = cov_matrix
@@ -27,7 +26,7 @@ y_EUR_5_index = 6
 mean_log_FX1 = mean_X1[log_FX_index]
 var_log_FX1 = cov_X1[log_FX_index, log_FX_index] #The log variance of the EUR/USD FX rate at time 1 = 0.005864534599574461
 
-    #The lognormal FX rate:
+    #The log-normal FX rate:
 mean_FX1=np.exp(mean_log_FX1+(var_log_FX1/2)) #The mean of the EUR/USD FX rate at time 1 = 1.0599535146393084
 var_FX1=(np.exp(var_log_FX1)-1)*np.exp(2*mean_log_FX1+var_log_FX1) #The variance of the EUR/USD FX rate at time 1 = 0.006608171129626716
 
@@ -127,7 +126,7 @@ filtered_covariance_matrix=covariance_matrix.loc[required_variables, required_va
 #Covariance matrix to t=1:
 cov_mat_fil1=filtered_covariance_matrix*52
 
-#Making the covariance matrix lognormal:
+#Making the covariance matrix log-normal:
 log_cov=cov_mat_fil1.to_numpy()
 
 def covariance_conversion(mean, covariance, T=4):
@@ -154,7 +153,7 @@ cov_P1=covariance_conversion(mean_log, log_cov, 4)
 variables=["FX t1", "EQV US Local t1", "EQV EUR t1", "Z4 USD Local t1", "Z4 EUR t1"]
 cov_P1=pd.DataFrame(cov_P1, index=variables, columns=variables)
 
-#Verify that the covariance matrix is positice semi-definite:
+#Verify that the covariance matrix is positive semi-definite:
 eigenvalues=np.linalg.eigvals(cov_P1.values)
 is_positive_semi_definite=np.all(eigenvalues>=0)
 is_positive_semi_definite, eigenvalues
@@ -162,11 +161,4 @@ is_positive_semi_definite, eigenvalues
 #The final distribution of the P1 vector:
 mean_P1, cov_P1
 
-
-"""#Export to Excel:
-mean_P1_excel=pd.DataFrame(mean_P1, index=variables, columns=["Mean"])
-mean_P1_excel.to_excel("mean_P1.xlsx")
-cov_P1.to_excel("cov_P1.xlsx")"""
-
-
-
+cov_P1.to_excel("Covariance Matrix P1.xlsx")
