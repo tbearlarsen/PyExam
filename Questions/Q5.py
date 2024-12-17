@@ -1,62 +1,45 @@
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
-from scipy.stats import lognorm
-from Questions.Q4 import mean_P1, cov_P1
+from scipy.stats import lognorm, norm
+from Questions.Q4 import mean_real_p1, cov_real_p1_df, mean_log_P1, cov_log_P1
 
-#Converting the covariance matrix to EUR:
-def convert_covariance_to_EUR(mean, covariance):
-    FX_1=mean[0]
-    v1_us_local=mean[1]
-    z4_us=mean[3]
+C = np.array([
+    [-1,  0,  0,  0,  0],  # Log(1/FX) = -Log FX
+    [-1,  1,  0,  0,  0],  # Log V_US - Log FX
+    [ 0,  0,  1,  0,  0],  # Log V_EUR
+    [-1,  0,  0,  1,  0],  # Log Z_USD (4Y) - Log FX
+    [ 0,  0,  0,  0,  1],  # Log Z_EUR (4Y)
+])
 
-    n=len(mean)
-    J=np.eye(n)
+#Compute transformed mean vector:
+mean_log_p1_eur=C@mean_log_P1
+print(f"Mean log P1 EUR:\n {mean_log_p1_eur}")
 
-    J[0,0]=-1/(FX_1**2)
+#Compute transformed covariance matrix:
+cov_log_p1_eur=C@cov_log_P1@C.T
+columns = ['log(1/FX_1)', 'log_V_USD_1 in EUR', 'log_V_EUR_1', 'log_Z_4Y_USD in EUR', 'log_Z_4Y_EUR']
+cov_log_p1_eur_df = pd.DataFrame(cov_log_p1_eur, index=columns, columns=columns)
+print(f"Cov Mat log P1 EUR:\n {cov_log_p1_eur_df}")
 
-    J[1,0]=-v1_us_local/(FX_1**2)
-    J[1,1]=1/FX_1
+#Bringing mean and covariance matrix out of log-space:
+var_log_p1_eur=np.diag(cov_log_p1_eur)
+mean_real_p1_eur=np.exp(mean_log_p1_eur+var_log_p1_eur/2)
 
-    J[3,0]=-z4_us/(FX_1**2)
-    J[3,3]=1/FX_1
+exp_cov_log_p1_eur = np.exp(cov_log_p1_eur)
+cov_real_p1_eur = (exp_cov_log_p1_eur - 1) * (mean_real_p1_eur[:, None] @ mean_real_p1_eur[None, :])
 
-    cov_P1_eur= J @ covariance @ J.T
-
-    return cov_P1_eur
-
-cov_P1_eur=convert_covariance_to_EUR(mean_P1, cov_P1)
-cov_P1_eur.index = ["1/FX t1", "EQV US t1", "EQV EUR t1", "Z4 USD t1", "Z4 EUR t1"]
-cov_P1_eur.columns = ["1/FX t1", "EQV US t1", "EQV EUR t1", "Z4 USD t1", "Z4 EUR t1"]
-
-#Verifying the covariance matrix is positive semi-definite:
-eigenvalues=np.linalg.eigvals(cov_P1_eur.values)
-is_positive_semi_definite=np.all(eigenvalues>=0)
-is_positive_semi_definite, eigenvalues
-
-#Converting the mean vector to EUR:
-    # Extract individual means from the P1 vector
-fx_mean = mean_P1[0]  # FX mean
-v_us_mean = mean_P1[1]  # USD stock mean
-v_eur_mean = mean_P1[2]  # EUR stock mean (unchanged)
-z_usd_4y_mean = mean_P1[3]  # USD bond mean
-z_eur_4y_mean = mean_P1[4]  # EUR bond mean (unchanged)
-
-    # Convert each component
-mu_1 = 1 / fx_mean  # 1 / FX_1
-mu_2 = v_us_mean / fx_mean  # V_US_LOCAL / FX_1
-mu_3 = v_eur_mean  # V_EUR (unchanged)
-mu_4 = z_usd_4y_mean / fx_mean  # Z_4Y_USD / FX_1
-mu_5 = z_eur_4y_mean  # Z_4Y_EUR (unchanged)
-
-mean_P1_eur=np.array([mu_1, mu_2, mu_3, mu_4, mu_5])
-
-
-#The distribution of the P1 EUR:
-mean_P1_eur, cov_P1_eur
+#Labelling:
+columns = ['1/FX_1', 'V_USD_1 in EUR', 'V_EUR_1', 'Z_4Y_USD in EUR', 'Z_4Y_EUR']
+cov_real_p1_eur_df = pd.DataFrame(cov_real_p1_eur, index=columns, columns=columns)
+mean_real_p1_eur_df = pd.DataFrame(mean_real_p1_eur, index=columns)
+print(f"Mean P1 EUR:\n {mean_real_p1_eur_df}"
+      f"\n\nCov Mat P1 EUR:\n {cov_real_p1_eur_df}")
 
 #Compare analytical distribution for V_US with the simulated distribution:
-v1_us_mean=mean_P1_eur[1]
-v1_us_var=cov_P1_eur.loc["EQV US t1", "EQV US t1"]
+v1_us_mean=mean_real_p1_eur_df.iloc[1]
+v1_us_var=cov_real_p1_eur_df.loc["V_USD_1 in EUR", "V_USD_1 in EUR"]
+
 
 #Number of simulations:
 num_simulations = 10000
@@ -64,7 +47,7 @@ np.random.seed(42)
 
 #Simulate V1^US in EUR:
 simulated_v1_us_eur = np.random.lognormal(
-    mean=np.log(v1_us_mean) - 0.5 * v1_us_var,  #Adjust mean for log-normal distribution
+    mean=np.log(v1_us_mean) - 0.5 * v1_us_var,
     sigma=np.sqrt(v1_us_var),
     size=num_simulations
 )

@@ -1,0 +1,344 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2820
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;\f1\fmodern\fcharset0 Courier-Oblique;\f2\fmodern\fcharset0 Courier;
+}
+{\colortbl;\red255\green255\blue255;\red121\green121\blue121;\red9\green9\blue9;\red18\green51\blue230;
+\red17\green109\blue18;\red0\green0\blue109;\red0\green29\blue164;\red10\green79\blue103;\red82\green0\blue135;
+\red121\green121\blue121;\red0\green29\blue164;\red10\green79\blue103;\red9\green9\blue9;\red18\green51\blue230;
+\red0\green0\blue109;\red17\green109\blue18;}
+{\*\expandedcolortbl;;\csgenericrgb\c47451\c47451\c47451;\csgenericrgb\c3529\c3529\c3529;\csgenericrgb\c7059\c20000\c90196;
+\csgenericrgb\c6667\c42745\c7059;\csgenericrgb\c0\c0\c42745;\csgenericrgb\c0\c11373\c64314;\csgenericrgb\c3922\c30980\c40392;\csgenericrgb\c32157\c0\c52941;
+\csgenericrgb\c47451\c47451\c47451;\csgenericrgb\c0\c11373\c64314;\csgenericrgb\c3922\c30980\c40392;\csgenericrgb\c3529\c3529\c3529;\csgenericrgb\c7059\c20000\c90196;
+\csgenericrgb\c0\c0\c42745;\csgenericrgb\c6667\c42745\c7059;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 #QUESTION 4:\
+\
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f1\i\fs26 \cf2 #Calculate mean and covariance matrix of X1:\
+
+\f2\i0 \cf3 mean_X1 = x0 + time_steps * mu\
+cov_X1 = time_steps * Sigma\
+\
+
+\f1\i \cf2 #Define indices for P1 components in X1:\
+
+\f2\i0 \cf3 log_FX_index = \cf4 0\
+\cf3 log_V_US_index = \cf4 1\
+\cf3 log_V_EUR_index = \cf4 2\
+\cf3 y_US_3_index = \cf4 11\
+\cf3 y_US_5_index = \cf4 12\
+\cf3 y_EUR_3_index = \cf4 5\
+\cf3 y_EUR_5_index = \cf4 6\
+\
+
+\f1\i \cf2 ##Analytical transformations for P1 components##\
+#The EUR/USD FX rate:\
+    #The log FX rate:\
+
+\f2\i0 \cf3 mean_log_FX1 = mean_X1[log_FX_index]\
+var_log_FX1 = cov_X1[log_FX_index, log_FX_index] 
+\f1\i \cf2 #The log variance of the EUR/USD FX rate at time 1 = 0.005864534599574461\
+\
+
+\f2\i0 \cf5 """    #The log-normal FX rate:\
+mean_FX1=np.exp(mean_log_FX1+(var_log_FX1/2)) #The mean of the EUR/USD FX rate at time 1 = 1.0599535146393084\
+var_FX1=(np.exp(var_log_FX1)-1)*np.exp(2*mean_log_FX1+var_log_FX1) #The variance of the EUR/USD FX rate at time 1 = 0.006608171129626716\
+print(f"FX_1:",mean_FX1,var_FX1)"""\
+\
+
+\f1\i \cf2 #The value of the US equity (local):\
+    #log mean and variance:\
+
+\f2\i0 \cf3 mean_log_V1_us_local = mean_X1[log_V_US_index]\
+var_log_V1_us_local = cov_X1[log_V_US_index, log_V_US_index]\
+\
+\cf5 """    #lognormal mean and variance:\
+mean_V1_us_local=np.exp(mean_log_V1_us_local+(var_log_V1_us_local/2))\
+var_V1_us_local=(np.exp(var_log_V1_us_local)-1)*np.exp(2*mean_log_V1_us_local+var_log_V1_us_local)\
+print(f"V_1_us_local:",mean_V1_us_local,var_V1_us_local)"""\
+\
+
+\f1\i \cf2 #The value of the EU equity:\
+    #log mean and variance:\
+
+\f2\i0 \cf3 mean_log_V1_eur = mean_X1[log_V_EUR_index]\
+var_log_V1_eur = cov_X1[log_V_EUR_index, log_V_EUR_index]\
+\
+\cf5 """    #lognormal mean and variance:\
+mean_v1_eur=np.exp(mean_log_V1_eur+(var_log_V1_eur/2))\
+var_v1_eur=(np.exp(var_log_V1_eur)-1)*np.exp(2*mean_log_V1_eur+var_log_V1_eur)\
+print(f"V_1_eur:",mean_v1_eur,var_v1_eur)"""\
+\
+\
+
+\f1\i \cf2 #Yield and price for 4-year bond:\
+#US bond yield:\
+    #mean:\
+
+\f2\i0 \cf3 mean_y1_us_4 = mean_X1[y_US_3_index] + (\cf4 4 \cf3 - \cf4 3\cf3 ) / (\cf4 5 \cf3 - \cf4 3\cf3 ) * (mean_X1[y_US_5_index] - mean_X1[y_US_3_index])\
+\
+    
+\f1\i \cf2 #variance:\
+
+\f2\i0 \cf3 var_y1_us_3=cov_X1[y_US_3_index, y_US_3_index]\
+var_y1_us_5=cov_X1[y_US_5_index, y_US_5_index]\
+var_y1_us_4=var_y1_us_3+(\cf4 4\cf3 -\cf4 3\cf3 )/(\cf4 5\cf3 -\cf4 3\cf3 )*(var_y1_us_5-var_y1_us_3)\
+\cf6 print\cf3 (\cf5 f"y_1_us_local:"\cf3 ,mean_y1_us_4,var_y1_us_4)\
+\
+
+\f1\i \cf2 #US bond price:\
+
+\f2\i0 \cf3 t=\cf4 4 
+\f1\i \cf2 #Time to maturity\
+#mean_z1_us_4=np.exp(-mean_y1_us_4*t+(t**2*var_y1_us_4)/2)\
+
+\f2\i0 \cf3 mean_log_z1_us_4=-t*mean_y1_us_4\
+
+\f1\i \cf2 #var_z1_us_4=np.exp(-2*t*mean_y1_us_4+(t**2)*var_y1_us_4)*(np.exp((t**2)*(var_y1_us_4))-1)\
+
+\f2\i0 \cf3 var_log_z1_us_4=np.sqrt(t**\cf4 2\cf3 *\cf4 52\cf3 *var_y1_us_4)\
+\cf6 print\cf3 (\cf5 f"z_1_us_local:"\cf3 ,mean_log_z1_us_4,var_log_z1_us_4)\
+\
+
+\f1\i \cf2 #EU bond yield:\
+    #mean:\
+
+\f2\i0 \cf3 mean_y1_eu_4=mean_X1[y_EUR_3_index]+(\cf4 4\cf3 -\cf4 3\cf3 )/(\cf4 5\cf3 -\cf4 3\cf3 )*(mean_X1[y_EUR_5_index]-mean_X1[y_EUR_3_index])\
+\
+    
+\f1\i \cf2 #variance:\
+
+\f2\i0 \cf3 var_y1_eu_3=cov_X1[y_EUR_3_index, y_EUR_3_index]\
+var_y1_eu_5=cov_X1[y_EUR_5_index, y_EUR_5_index]\
+var_y1_eu_4=var_y1_eu_3+(\cf4 4\cf3 -\cf4 3\cf3 )/(\cf4 5\cf3 -\cf4 3\cf3 )*(var_y1_eu_5-var_y1_eu_3)\
+\cf6 print\cf3 (\cf5 f"y_1_eu:"\cf3 ,mean_y1_eu_4,var_y1_eu_4)\
+\
+
+\f1\i \cf2 #EU bond price:\
+
+\f2\i0 \cf3 t=\cf4 4\
+
+\f1\i \cf2 #mean_z1_eu_4=np.exp(-mean_y1_eu_4*t+(t**2*var_y1_eu_4)/2)\
+
+\f2\i0 \cf3 mean_log_z1_eu_4=-t*mean_y1_eu_4\
+
+\f1\i \cf2 #var_z1_eu_4=np.exp(-2*t*mean_y1_eu_4+(t**2)*var_y1_eu_4)*(np.exp((t**2)*(var_y1_eu_4))-1)\
+
+\f2\i0 \cf3 var_log_z1_eu_4=np.sqrt(t**\cf4 2\cf3 *\cf4 52\cf3 *var_y1_eu_4)\
+\cf6 print\cf3 (\cf5 f"z_1_eu:"\cf3 ,mean_log_z1_eu_4,var_log_z1_eu_4)\
+\
+
+\f1\i \cf2 #Construct H1 vector:\
+
+\f2\i0 \cf3 mean_log=[mean_log_FX1, mean_log_V1_us_local, mean_log_V1_eur, mean_y1_us_4, mean_y1_eu_4]\
+\cf6 print\cf3 (mean_log)\
+\
+
+\f1\i \cf2 #Construct the mean P1 vector:\
+
+\f2\i0 \cf3 mean_P1 = np.array([mean_log_FX1, mean_log_V1_us_local, mean_log_V1_eur, mean_log_z1_us_4, mean_log_z1_eu_4])\
+\cf6 print\cf3 (mean_P1)\
+\
+\
+
+\f1\i \cf2 #Interpolating and Filtering the covariance matrix:\
+
+\f2\i0 \cf3 usd_3y_5y=covariance_matrix.loc[[\cf5 "3Y USD"\cf3 , \cf5 "5Y USD"\cf3 ]]\
+eur_3y_5y=covariance_matrix.loc[[\cf5 "3Y EUR"\cf3 , \cf5 "5Y EUR"\cf3 ]]\
+\
+
+\f1\i \cf2 #Interpolating the 4-year yields:\
+
+\f2\i0 \cf3 usd_4y=usd_3y_5y.loc[\cf5 "3Y USD"\cf3 ]+(usd_3y_5y.loc[\cf5 "5Y USD"\cf3 ]-usd_3y_5y.loc[\cf5 "3Y USD"\cf3 ])*(\cf4 4\cf3 -\cf4 3\cf3 )/(\cf4 5\cf3 -\cf4 3\cf3 )\
+eur_4y=eur_3y_5y.loc[\cf5 "3Y EUR"\cf3 ]+(eur_3y_5y.loc[\cf5 "5Y EUR"\cf3 ]-eur_3y_5y.loc[\cf5 "3Y EUR"\cf3 ])*(\cf4 4\cf3 -\cf4 3\cf3 )/(\cf4 5\cf3 -\cf4 3\cf3 )\
+\
+
+\f1\i \cf2 #Add to covariance matrix:\
+    #rows\
+
+\f2\i0 \cf3 covariance_matrix.loc[\cf5 "4Y USD"\cf3 ]=usd_4y\
+covariance_matrix.loc[\cf5 "4Y EUR"\cf3 ]=eur_4y\
+\
+    
+\f1\i \cf2 #columns\
+
+\f2\i0 \cf3 covariance_matrix[\cf5 "4Y USD"\cf3 ]=usd_4y\
+covariance_matrix[\cf5 "4Y EUR"\cf3 ]=eur_4y\
+\
+
+\f1\i \cf2 #Interpolate the 4-year bond yield variables:\
+
+\f2\i0 \cf3 covariance_matrix.loc[\cf5 "4Y USD"\cf3 ,\cf5 "4Y USD"\cf3 ]=usd_3y_5y.loc[\cf5 "3Y USD"\cf3 , \cf5 "3Y USD"\cf3 ]+(usd_3y_5y.loc[\cf5 "5Y USD"\cf3 , \cf5 "5Y USD"\cf3 ]-usd_3y_5y.loc[\cf5 "3Y USD"\cf3 , \cf5 "3Y USD"\cf3 ])*(\cf4 4\cf3 -\cf4 3\cf3 )/(\cf4 5\cf3 -\cf4 3\cf3 )\
+covariance_matrix.loc[\cf5 "4Y EUR"\cf3 ,\cf5 "4Y EUR"\cf3 ]=eur_3y_5y.loc[\cf5 "3Y EUR"\cf3 , \cf5 "3Y EUR"\cf3 ]+(eur_3y_5y.loc[\cf5 "5Y EUR"\cf3 , \cf5 "5Y EUR"\cf3 ]-eur_3y_5y.loc[\cf5 "3Y EUR"\cf3 , \cf5 "3Y EUR"\cf3 ])*(\cf4 4\cf3 -\cf4 3\cf3 )/(\cf4 5\cf3 -\cf4 3\cf3 )\
+\
+
+\f1\i \cf2 #Interpolate cross-covariances:\
+
+\f2\i0 \cf3 cov_4y_us_eur=covariance_matrix.loc[\cf5 "3Y USD"\cf3 , \cf5 "3Y EUR"\cf3 ]+(covariance_matrix.loc[\cf5 "5Y USD"\cf3 , \cf5 "5Y EUR"\cf3 ]-covariance_matrix.loc[\cf5 "3Y USD"\cf3 , \cf5 "3Y EUR"\cf3 ])*(\cf4 4\cf3 -\cf4 3\cf3 )/(\cf4 5\cf3 -\cf4 3\cf3 )\
+covariance_matrix.loc[\cf5 "4Y USD"\cf3 , \cf5 "4Y EUR"\cf3 ]=cov_4y_us_eur\
+covariance_matrix.loc[\cf5 "4Y EUR"\cf3 , \cf5 "4Y USD"\cf3 ]=cov_4y_us_eur\
+\
+
+\f1\i \cf2 #Filtering:\
+
+\f2\i0 \cf3 required_variables=[\cf5 "fx_spot"\cf3 ,\cf5 "EQV US"\cf3 , \cf5 "EQV EUR"\cf3 , \cf5 "4Y USD"\cf3 , \cf5 "4Y EUR"\cf3 ]\
+filtered_covariance_matrix=covariance_matrix.loc[required_variables, required_variables]\
+\
+
+\f1\i \cf2 #Covariance matrix to t=1:\
+
+\f2\i0 \cf3 cov_mat_fil1=filtered_covariance_matrix*\cf4 52\
+\
+
+\f1\i \cf2 #Making the covariance matrix log-normal:\
+
+\f2\i0 \cf3 log_cov=cov_mat_fil1.to_numpy()\
+\
+\cf7 def \cf8 covariance_conversion\cf3 (\cf0 mean\cf3 , \cf0 covariance\cf3 , \cf0 T\cf3 =\cf4 4\cf3 ):\
+    \cf0 n\cf3 =\cf6 len\cf3 (\cf0 mean\cf3 )\
+    \cf0 J\cf3 =np.eye(\cf0 n\cf3 )\
+\
+    
+\f1\i \cf2 #log to lognormal for variables 0-2:\
+    
+\f2\i0 \cf7 for \cf0 i \cf7 in \cf6 range\cf3 (\cf4 3\cf3 ):\
+        \cf0 J\cf3 [\cf0 i\cf3 ,\cf0 i\cf3 ]=np.exp(\cf0 mean\cf3 [\cf0 i\cf3 ]+\cf4 0.5\cf3 *\cf0 covariance\cf3 [\cf0 i\cf3 ,\cf0 i\cf3 ])\
+\
+    
+\f1\i \cf2 #Yield to bond price for variables 3-4:\
+    
+\f2\i0 \cf0 z_us\cf3 =np.exp(-\cf0 mean\cf3 [\cf4 3\cf3 ]*\cf0 T\cf3 )\
+    \cf0 z_eur\cf3 =np.exp(-\cf0 mean\cf3 [\cf4 4\cf3 ]*\cf0 T\cf3 )\
+    \cf0 J\cf3 [\cf4 3\cf3 ,\cf4 3\cf3 ]=-\cf0 T\cf3 *\cf0 z_us\
+    J\cf3 [\cf4 4\cf3 ,\cf4 4\cf3 ]=-\cf0 T\cf3 *\cf0 z_eur\
+\
+    
+\f1\i \cf2 #Full transformation of the covariance matrix:\
+    
+\f2\i0 \cf0 cov_P1 \cf3 = \cf0 J \cf3 @ \cf0 covariance \cf3 @ \cf0 J\cf3 .T\
+\
+    \cf7 return \cf0 cov_P1\
+\
+\cf3 cov_P1=covariance_conversion(mean_log, log_cov, \cf4 4\cf3 )\
+\
+variables=[\cf5 "FX t1"\cf3 , \cf5 "EQV US Local t1"\cf3 , \cf5 "EQV EUR t1"\cf3 , \cf5 "Z4 USD Local t1"\cf3 , \cf5 "Z4 EUR t1"\cf3 ]\
+cov_P1=pd.DataFrame(cov_P1, \cf9 index\cf3 =variables, \cf9 columns\cf3 =variables)\
+\
+
+\f1\i \cf2 #Verify that the covariance matrix is positive semi-definite:\
+
+\f2\i0 \cf3 eigenvalues=np.linalg.eigvals(cov_P1.values)\
+is_positive_semi_definite=np.all(eigenvalues>=\cf4 0\cf3 )\
+is_positive_semi_definite, eigenvalues\
+\
+
+\f1\i \cf2 #The final distribution of the P1 vector:\
+
+\f2\i0 \cf3 mean_P1, cov_P1\
+\
+cov_P1.to_excel(\cf5 "Covariance Matrix P1.xlsx"\cf3 )\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+#Question 5:\
+\
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f1\i \cf10 #Converting the covariance matrix to EUR:\
+
+\f2\i0 \cf11 def \cf12 convert_covariance_to_EUR\cf13 (\cf0 mean\cf13 , \cf0 covariance\cf13 ):\
+    \cf0 FX_1\cf13 =\cf0 mean\cf13 [\cf14 0\cf13 ]\
+    \cf0 v1_us_local\cf13 =\cf0 mean\cf13 [\cf14 1\cf13 ]\
+    \cf0 z4_us\cf13 =\cf0 mean\cf13 [\cf14 3\cf13 ]\
+\
+    \cf0 n\cf13 =\cf15 len\cf13 (\cf0 mean\cf13 )\
+    \cf0 J\cf13 =np.eye(\cf0 n\cf13 )\
+\
+    \cf0 J\cf13 [\cf14 0\cf13 ,\cf14 0\cf13 ]=-\cf14 1\cf13 /(\cf0 FX_1\cf13 **\cf14 2\cf13 )\
+\
+    \cf0 J\cf13 [\cf14 1\cf13 ,\cf14 0\cf13 ]=-\cf0 v1_us_local\cf13 /(\cf0 FX_1\cf13 **\cf14 2\cf13 )\
+    \cf0 J\cf13 [\cf14 1\cf13 ,\cf14 1\cf13 ]=\cf14 1\cf13 /\cf0 FX_1\
+\
+    J\cf13 [\cf14 3\cf13 ,\cf14 0\cf13 ]=-\cf0 z4_us\cf13 /(\cf0 FX_1\cf13 **\cf14 2\cf13 )\
+    \cf0 J\cf13 [\cf14 3\cf13 ,\cf14 3\cf13 ]=\cf14 1\cf13 /\cf0 FX_1\
+\
+    cov_P1_eur\cf13 = \cf0 J \cf13 @ \cf0 covariance \cf13 @ \cf0 J\cf13 .T\
+\
+    \cf11 return \cf0 cov_P1_eur\
+\
+\cf13 cov_P1_eur=convert_covariance_to_EUR(mean_P1, cov_P1)\
+cov_P1_eur.index = [\cf16 "1/FX t1"\cf13 , \cf16 "EQV US t1"\cf13 , \cf16 "EQV EUR t1"\cf13 , \cf16 "Z4 USD t1"\cf13 , \cf16 "Z4 EUR t1"\cf13 ]\
+cov_P1_eur.columns = [\cf16 "1/FX t1"\cf13 , \cf16 "EQV US t1"\cf13 , \cf16 "EQV EUR t1"\cf13 , \cf16 "Z4 USD t1"\cf13 , \cf16 "Z4 EUR t1"\cf13 ]\
+\
+
+\f1\i \cf10 #Verifying the covariance matrix is positive semi-definite:\
+
+\f2\i0 \cf13 eigenvalues=np.linalg.eigvals(cov_P1_eur.values)\
+is_positive_semi_definite=np.all(eigenvalues>=\cf14 0\cf13 )\
+is_positive_semi_definite, eigenvalues\
+\
+
+\f1\i \cf10 #Converting the mean vector to EUR:\
+    # Extract individual means from the P1 vector\
+
+\f2\i0 \cf13 fx_mean = mean_P1[\cf14 0\cf13 ]  
+\f1\i \cf10 # FX mean\
+
+\f2\i0 \cf13 v_us_mean = mean_P1[\cf14 1\cf13 ]  
+\f1\i \cf10 # USD stock mean\
+
+\f2\i0 \cf13 v_eur_mean = mean_P1[\cf14 2\cf13 ]  
+\f1\i \cf10 # EUR stock mean (unchanged)\
+
+\f2\i0 \cf13 z_usd_4y_mean = mean_P1[\cf14 3\cf13 ]  
+\f1\i \cf10 # USD bond mean\
+
+\f2\i0 \cf13 z_eur_4y_mean = mean_P1[\cf14 4\cf13 ]  
+\f1\i \cf10 # EUR bond mean (unchanged)\
+\
+    # Convert each component\
+
+\f2\i0 \cf13 mu_1 = \cf14 1 \cf13 / fx_mean  
+\f1\i \cf10 # 1 / FX_1\
+
+\f2\i0 \cf13 mu_2 = v_us_mean / fx_mean  
+\f1\i \cf10 # V_US_LOCAL / FX_1\
+
+\f2\i0 \cf13 mu_3 = v_eur_mean  
+\f1\i \cf10 # V_EUR (unchanged)\
+
+\f2\i0 \cf13 mu_4 = z_usd_4y_mean / fx_mean  
+\f1\i \cf10 # Z_4Y_USD / FX_1\
+
+\f2\i0 \cf13 mu_5 = z_eur_4y_mean  
+\f1\i \cf10 # Z_4Y_EUR (unchanged)\
+\
+
+\f2\i0 \cf13 mean_P1_eur=np.array([mu_1, mu_2, mu_3, mu_4, mu_5])\
+\
+\
+
+\f1\i \cf10 #The distribution of the P1 EUR:\
+
+\f2\i0 \cf13 mean_P1_eur, cov_P1_eur\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+\cf3 \
+}

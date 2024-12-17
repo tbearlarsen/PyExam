@@ -25,10 +25,10 @@ delta_yt=np.random.normal(loc=0, scale=std_delta_y0_us_4, size=(time_horizon, nu
 total_change=np.sum(delta_yt, axis=0)
 
 #4-year yield at t=1:
-y1_us_4=y0_us_4+total_change
+y1_us_4_sim=y0_us_4+total_change
 
-#4-year bond price at t=1:
-z1_us_4=np.exp(-y1_us_4*tau_1)
+#4-year bond price at t=1 (Simulated):
+z1_us_4_sim=np.exp(-y1_us_4_sim*tau_1)
 
 
 #Analytical distribution parameters:
@@ -36,14 +36,14 @@ mean_log_z1_us_4=-tau_1*y0_us_4
 std_log_z1_us_4=np.sqrt(tau_1**2*52*std_delta_y0_us_4**2)
 
 #Analytical PDF for log-normal distribution:
-x=np.linspace(np.min(z1_us_4), np.max(z1_us_4), 1000)
+x=np.linspace(np.min(z1_us_4_sim), np.max(z1_us_4_sim), 1000)
 an_pdf=lognorm.pdf(x, s=std_log_z1_us_4, scale=np.exp(mean_log_z1_us_4))
 
 #PLOTTING THE DISTRIBUTIONS:
 plt.figure(figsize=(10, 6))
 
 #Plot the histogram of simulated values:
-plt.hist(z1_us_4, bins=50, density=True, color='skyblue', edgecolor='black', label='Simulated Distribution')
+plt.hist(z1_us_4_sim, bins=50, density=True, color='skyblue', edgecolor='black', label='Simulated Distribution')
 
 #Plot the analytical PDF:
 plt.plot(x, an_pdf, 'r-', lw=2, label='Analytical PDF (Log-normal)')
@@ -54,3 +54,5 @@ plt.ylabel('Density')
 plt.legend()
 plt.grid(True, linestyle='--', linewidth=0.5)
 plt.show()
+
+
