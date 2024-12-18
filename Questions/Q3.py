@@ -56,3 +56,54 @@ plt.grid(True, linestyle='--', linewidth=0.5)
 plt.show()
 
 
+
+
+
+
+
+# Parameters for simulation
+tau_0 = 5  # Maturity of the bond (5 years)
+
+std_delta_y0_us_5 = np.sqrt(cov_matrix[12, 12])  # Standard deviation of yield changes
+
+# Simulate the evolution of the 5-year yield
+np.random.seed(42)  # Ensure reproducibility
+simulated_yields = np.zeros((time_horizon + 1, num_simulations))
+simulated_yields[0] = y0_us_5  # Initial yield
+
+for t in range(1, time_horizon + 1):
+    # Weekly changes in yield
+    weekly_changes = np.random.normal(0, std_delta_y0_us_5, num_simulations)
+    simulated_yields[t] = simulated_yields[t - 1] + weekly_changes
+
+# Calculate the 5-year bond price evolution
+simulated_prices = np.exp(-simulated_yields * tau_0)
+
+# Plot one path of the 5-year bond yield evolution
+plt.figure(figsize=(10, 6))
+plt.plot(range(time_horizon + 1), simulated_yields[:, 0], label="Simulation 1", linewidth=2, color="blue")
+plt.title("5-Year Yield Evolution (Single Path)")
+plt.xlabel("Weeks")
+plt.ylabel("Yield")
+plt.grid(True)
+plt.show()
+
+# Plot multiple paths for the yield evolution
+plt.figure(figsize=(10, 6))
+for i in range(min(10, num_simulations)):  # Show first 10 simulations
+    plt.plot(range(time_horizon + 1), simulated_yields[:, i], alpha=0.7)
+plt.title("5-Year Yield Evolution (Multiple Paths)")
+plt.xlabel("Weeks")
+plt.ylabel("Yield")
+plt.grid(True)
+plt.show()
+
+# Plot the bond price distribution at t=1
+plt.figure(figsize=(10, 6))
+plt.hist(simulated_prices[-1], bins=50, density=True, color="lightgreen", edgecolor="black", label="Simulated Prices")
+plt.title("5-Year Bond Price Distribution at t=1")
+plt.xlabel("Price")
+plt.ylabel("Density")
+plt.grid(True, linestyle="--", linewidth=0.5)
+plt.legend()
+plt.show()
