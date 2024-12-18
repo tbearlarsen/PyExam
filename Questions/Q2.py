@@ -33,6 +33,7 @@ an_std_delta_log_v=np.sqrt(cov_matrix[1,1])
 #Calculate log values:
 an_mean_log_v1_us_local=log_v0_us_local+time_horizon*an_mean_delta_log_v
 an_std_log_v1_us_local=np.sqrt(time_horizon)*an_std_delta_log_v
+an_var_log_v1_us_local=an_std_log_v1_us_local**2
 
 #Log-normal disrtibution:
 an_mean_v1_us_local=np.exp(an_mean_log_v1_us_local+(an_std_log_v1_us_local**2)/2)
