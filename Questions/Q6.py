@@ -68,9 +68,15 @@ print(mean_log_p1_eur) """
 cov_pnl1 = C @ cov_real_p1_eur_df @ C.T
 cov_pnl1.shape
 
-
-
 print(E_pnl1)
 print(cov_pnl1)
 print(fx0)
+
+"""h=np.array([1,1,1,1,1])
+E_pnl1_p=np.dot(h,E_pnl1)
+var_pnl1_p=np.dot(h.T,np.dot(cov_pnl1,h))
+
+print(E_pnl1_p)
+print(var_pnl1_p)
+"""
 
