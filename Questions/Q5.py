@@ -24,7 +24,9 @@ print(f"Cov Mat log P1 EUR:\n {cov_log_p1_eur_df}")
 
 #Bringing mean and covariance matrix out of log-space:
 var_log_p1_eur=np.diag(cov_log_p1_eur)
+var_log_V1_eur=cov_log_p1_eur_df.loc["log_V_USD_1 in EUR", "log_V_USD_1 in EUR"]
 mean_real_p1_eur=np.exp(mean_log_p1_eur+var_log_p1_eur/2)
+mean_log_V1_eur=mean_log_p1_eur[1]
 
 exp_cov_log_p1_eur = np.exp(cov_log_p1_eur)
 cov_real_p1_eur = (np.exp(cov_log_p1_eur) - 1) * np.exp(np.add.outer(mean_log_p1_eur, mean_log_p1_eur) + cov_log_p1_eur)
@@ -43,7 +45,7 @@ v1_us_var=cov_real_p1_eur_df.loc["V_USD_1 in EUR", "V_USD_1 in EUR"]
 
 
 #Number of simulations:
-num_simulations = 10000
+num_simulations = 100000
 np.random.seed(42)
 
 #Simulate V1^US in EUR:
@@ -53,13 +55,19 @@ simulated_v1_us_eur = np.random.lognormal(
     size=num_simulations
 )
 
+"""#Analytical distribution parameters:
+x_values = np.linspace(min(simulated_v1_us_eur), max(simulated_v1_us_eur), 1000)
+pdf_values = lognorm.pdf(x_values, s=np.sqrt(v1_us_var), scale=v1_us_mean)"""
+
 #Analytical distribution parameters:
 x_values = np.linspace(min(simulated_v1_us_eur), max(simulated_v1_us_eur), 1000)
-pdf_values = lognorm.pdf(x_values, s=np.sqrt(v1_us_var), scale=v1_us_mean)
+pdf_values = lognorm.pdf(x_values, s=np.sqrt(var_log_V1_eur), scale=np.exp(mean_log_V1_eur))
+
+
 
 #Plotting the distributions:
 plt.figure(figsize=(10, 6))
-plt.hist(simulated_v1_us_eur, bins=50, alpha=0.5, density=True, label='Simulated Distribution')
+plt.hist(simulated_v1_us_eur, bins=100, alpha=0.5, density=True, color='skyblue', edgecolor='black', label='Simulated Distribution')
 plt.plot(x_values, pdf_values, 'r', label='Analytical Distribution', linewidth=2)
 plt.title('Comparison of Simulated and Analytical Distributions for $V_{1}^{US}$ in EUR')
 plt.xlabel('$V_{1}^{US}$ in EUR')
