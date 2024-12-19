@@ -10,14 +10,6 @@ log_v0_us_local=x0[1]
 log_v1_us_local=X_t[time_horizon,1,:]
 v1_us_local=np.exp(log_v1_us_local)
 
-#Plot distribution of V_1^US,local (this is the simulation):
-plt.figure(figsize=(10, 6))
-plt.hist(v1_us_local, bins=50, color='skyblue', edgecolor='black', density=True)
-plt.xlabel('V_US,local^1')
-plt.ylabel('Density')
-plt.title('Distribution of V_US,local^1 at t=1 (USD)')
-plt.grid(True, linestyle='--', linewidth=0.5)
-plt.show()
 
 #Summary statistics:
 mean_V1_us_local=np.mean(v1_us_local)
