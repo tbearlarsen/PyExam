@@ -5,7 +5,7 @@ from Data.Data import cov_matrix, x0, mean_vector
 #Defining the parameters:
 mu=mean_vector
 time_horizon = 52
-num_simulations = 1000
+num_simulations = 100000
 
 #Simulating X_t evolution:
 np.random.seed(42)

@@ -29,7 +29,7 @@ std_delta_y1_us_4=np.sqrt(var_delta_y1_us_4)
 
 #Define simulation parameters:
 np.random.seed(42)
-num_simulations=10000
+num_simulations=100000
 time_horizon=52
 tau_1=4
 
@@ -46,17 +46,27 @@ z1_us_4_sim=np.exp(-y1_us_4_sim*tau_1)
 
 #Analytical distribution parameters:
 mean_log_z1_us_4=-tau_1*y1_us_4
-std_log_z1_us_4=np.sqrt(tau_1**2*52*std_delta_y0_us_4**2)#I CHANGED THIS TO T=1
+var_log_z1_us_4=tau_1**2*52*var_delta_y0_us_4
+std_log_z1_us_4=np.sqrt(var_log_z1_us_4)
+#std_log_z1_us_4=tau_1*np.sqrt(52*var_delta_y0_us_4)
+#var_log_z1_us_4=std_log_z1_us_4**2
+
+#Real-scale values:
+an_mean_log_z1_us_4=np.exp(mean_log_z1_us_4+(var_log_z1_us_4)/2)
+an_var_z1_us_4=(np.exp(var_log_z1_us_4) - 1) * np.exp(2 * mean_log_z1_us_4 + var_log_z1_us_4)
+an_std_z1_us_4=np.sqrt(an_var_z1_us_4)
+
 
 #Analytical PDF for log-normal distribution:
 x=np.linspace(np.min(z1_us_4_sim), np.max(z1_us_4_sim), 1000)
-an_pdf=lognorm.pdf(x, s=std_log_z1_us_4, scale=np.exp(mean_log_z1_us_4))#SOMETHING IS WRONG HERE
+an_pdf=lognorm.pdf(x, s=std_log_z1_us_4, scale=np.exp(mean_log_z1_us_4))
+
 
 #PLOTTING THE DISTRIBUTIONS:
 plt.figure(figsize=(10, 6))
 
 #Plot the histogram of simulated values:
-plt.hist(z1_us_4_sim, bins=50, density=True, color='skyblue', edgecolor='black', label='Simulated Distribution')
+plt.hist(z1_us_4_sim, bins=100, density=True, color='skyblue', edgecolor='black', label='Simulated Distribution')
 
 #Plot the analytical PDF:
 plt.plot(x, an_pdf, 'r-', lw=2, label='Analytical PDF (Log-normal)')
@@ -73,7 +83,7 @@ plt.show()
 
 
 
-
+"""
 # Parameters for simulation
 tau_0 = 5  # Maturity of the bond (5 years)
 
@@ -119,4 +129,4 @@ plt.xlabel("Price")
 plt.ylabel("Density")
 plt.grid(True, linestyle="--", linewidth=0.5)
 plt.legend()
-plt.show()
+plt.show()"""
