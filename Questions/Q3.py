@@ -1,7 +1,10 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from Data.Data import cov_matrix, x0
+from Data.Data import cov_matrix, x0, mean_vector
 from scipy.stats import lognorm
+
+mu=mean_vector
+time_horizon=52
 
 #Define yield parameters for interpolation:
 y0_us_3=x0[11]
@@ -9,10 +12,20 @@ y0_us_5=x0[12]
 var_delta_y0_us_3=cov_matrix[11,11]
 var_delta_y0_us_5=cov_matrix[12,12]
 
-#4-year yield interpolation:
+#4-year yield interpolation at t=0:
 y0_us_4=y0_us_3+(4-3)/(5-3)*(y0_us_5-y0_us_3)
 var_delta_y0_us_4=var_delta_y0_us_3+((4-3)/(5-3)*(var_delta_y0_us_5-var_delta_y0_us_3))
 std_delta_y0_us_4=np.sqrt(var_delta_y0_us_4)
+
+#4-year yield interpolation at t=1:
+y1_us_3=x0[11]+mu[11]*time_horizon
+y1_us_5=x0[12]+mu[12]*time_horizon
+var_delta_y1_us_3=cov_matrix[11,11]*52
+var_delta_y1_us_5=cov_matrix[12,12]*52
+
+y1_us_4=y1_us_3+(4-3)/(5-3)*(y1_us_5-y1_us_3)
+var_delta_y1_us_4=var_delta_y1_us_3+((4-3)/(5-3)*(var_delta_y1_us_5-var_delta_y1_us_3))
+std_delta_y1_us_4=np.sqrt(var_delta_y1_us_4)
 
 #Define simulation parameters:
 np.random.seed(42)
@@ -32,12 +45,12 @@ z1_us_4_sim=np.exp(-y1_us_4_sim*tau_1)
 
 
 #Analytical distribution parameters:
-mean_log_z1_us_4=-tau_1*y0_us_4
-std_log_z1_us_4=np.sqrt(tau_1**2*52*std_delta_y0_us_4**2)
+mean_log_z1_us_4=-tau_1*y1_us_4
+std_log_z1_us_4=np.sqrt(tau_1**2*52*std_delta_y0_us_4**2)#I CHANGED THIS TO T=1
 
 #Analytical PDF for log-normal distribution:
 x=np.linspace(np.min(z1_us_4_sim), np.max(z1_us_4_sim), 1000)
-an_pdf=lognorm.pdf(x, s=std_log_z1_us_4, scale=np.exp(mean_log_z1_us_4))
+an_pdf=lognorm.pdf(x, s=std_log_z1_us_4, scale=np.exp(mean_log_z1_us_4))#SOMETHING IS WRONG HERE
 
 #PLOTTING THE DISTRIBUTIONS:
 plt.figure(figsize=(10, 6))
