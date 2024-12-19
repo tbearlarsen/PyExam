@@ -47,9 +47,6 @@ E_pnl_z_eur=mean_real_p1_eur_df.iloc[4]-mean_z0_eur_5
 #Expected value of the PnL1 vector:
 E_pnl1=np.array([E_pnl_fx,E_pnl_v_us,E_pnl_v_eur,E_pnl_z_us,E_pnl_z_eur])
 
-#Covariance matrix of the PnL1 vector:
-#cov_pnl1=cov_P1_eur
-
 # Convert P1 EUR to PnL
 # Transformation matrix C
 C = np.array([

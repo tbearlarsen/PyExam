@@ -27,7 +27,10 @@ var_log_p1_eur=np.diag(cov_log_p1_eur)
 mean_real_p1_eur=np.exp(mean_log_p1_eur+var_log_p1_eur/2)
 
 exp_cov_log_p1_eur = np.exp(cov_log_p1_eur)
-cov_real_p1_eur = (exp_cov_log_p1_eur - 1) * (mean_real_p1_eur[:, None] @ mean_real_p1_eur[None, :])
+cov_real_p1_eur = (np.exp(cov_log_p1_eur) - 1) * np.exp(np.add.outer(mean_log_p1_eur, mean_log_p1_eur) + cov_log_p1_eur)
+
+
+
 
 #Labelling:
 columns = ['1/FX_1', 'V_USD_1 in EUR', 'V_EUR_1', 'Z_4Y_USD in EUR', 'Z_4Y_EUR']
